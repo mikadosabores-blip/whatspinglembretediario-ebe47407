@@ -106,7 +106,7 @@ export function CommitmentTimeline({ commitments, onDelete, onUpdate }: Props) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-lg">{cat?.emoji || "📌"}</span>
-                        <span className="font-bold text-foreground text-sm">{c.title}</span>
+                        <span className="font-bold text-card-foreground text-sm">{c.title}</span>
                         <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                           {cat?.label || c.category}
                         </span>

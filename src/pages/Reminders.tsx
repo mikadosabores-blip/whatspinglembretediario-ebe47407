@@ -1,5 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
-import { CommitmentForm } from "@/components/reminders/CommitmentForm";
+import { QuickCommitmentForm } from "@/components/reminders/QuickCommitmentForm";
 import { CommitmentTimeline } from "@/components/reminders/CommitmentTimeline";
 import { useCommitments } from "@/hooks/useCommitments";
 
@@ -8,18 +8,19 @@ const Reminders = () => {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-extrabold text-foreground">Lembretes Inteligentes</h1>
-          <p className="text-sm text-muted-foreground">
-            Cadastre compromissos e receba lembretes automáticos no WhatsApp.
-          </p>
-        </div>
-        <CommitmentForm onSubmit={addCommitment} />
+      <div className="mb-6">
+        <h1 className="text-2xl font-extrabold text-foreground">Lembretes Inteligentes</h1>
+        <p className="text-sm text-muted-foreground">
+          Cadastre compromissos e receba lembretes automáticos no WhatsApp.
+        </p>
+      </div>
+
+      <div className="mb-6">
+        <QuickCommitmentForm onSubmit={addCommitment} />
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center h-32">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
       ) : (
