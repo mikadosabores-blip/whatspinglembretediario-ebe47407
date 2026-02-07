@@ -92,7 +92,8 @@ Deno.serve(async (req) => {
       const contactIds: string[] = c.notify_contact_ids || [];
       interface Recipient { phone: string; name: string; }
       let recipients: Recipient[] = [];
-      if (contactIds.length > 0) {
+      const hasExplicitContacts = contactIds.length > 0;
+      if (hasExplicitContacts) {
         const { data: contacts } = await supabase
           .from("user_contacts")
           .select("whatsapp_number, name")
@@ -103,9 +104,14 @@ Deno.serve(async (req) => {
           }
         }
       }
-      // If no contacts selected, send to the owner
-      if (recipients.length === 0) {
+      // Only fall back to owner if NO explicit contacts were set
+      if (recipients.length === 0 && !hasExplicitContacts) {
         recipients = [{ phone, name: profile.name }];
+      }
+      // If explicit contacts were set but none resolved, skip sending
+      if (recipients.length === 0) {
+        console.log(`Skipping "${c.title}": explicit contacts set but none resolved`);
+        continue;
       }
       const categoryLabels: Record<string, string> = {
         dentista: "🦷 Dentista", medico: "🏥 Médico", escola: "🏫 Escola",
@@ -206,8 +212,16 @@ Deno.serve(async (req) => {
 
       // On-time reminder: fires when diffMinutes <= 2 (covers the gap)
       if (!firedOne && !c.notified_ontime && diffMinutes <= 2 && diffMinutes > -5) {
-        const ok = await sendToAll("", true, "ontime");
-        if (ok) {
+        // Check how many times we already tried (to avoid infinite retry loop)
+        const { count: failCount } = await supabase
+          .from("notification_logs")
+          .select("*", { count: "exact", head: true })
+          .eq("commitment_id", c.id)
+          .eq("reminder_type", "ontime");
+
+        if ((failCount || 0) >= 3) {
+          // Too many attempts, mark as done to stop retrying
+          console.log(`Stopping retries for "${c.title}" after ${failCount} attempts`);
           await supabase.from("commitments").update({
             notified_ontime: true,
             notified_days: true,
@@ -215,6 +229,17 @@ Deno.serve(async (req) => {
             notified_minutes: true,
             status: "done",
           }).eq("id", c.id);
+        } else {
+          const ok = await sendToAll("", true, "ontime");
+          if (ok) {
+            await supabase.from("commitments").update({
+              notified_ontime: true,
+              notified_days: true,
+              notified_hours: true,
+              notified_minutes: true,
+              status: "done",
+            }).eq("id", c.id);
+          }
         }
       }
     }
