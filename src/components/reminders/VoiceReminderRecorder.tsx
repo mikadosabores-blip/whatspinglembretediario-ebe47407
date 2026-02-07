@@ -152,7 +152,7 @@ export function VoiceReminderRecorder({ onResult, contacts = [] }: Props) {
     } finally {
       setIsProcessing(false);
     }
-  }, [transcript]);
+  }, [transcript, contacts]);
 
   const confirmResult = () => {
     if (result) {
