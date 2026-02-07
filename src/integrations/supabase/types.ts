@@ -100,6 +100,50 @@ export type Database = {
           },
         ]
       }
+      notification_logs: {
+        Row: {
+          commitment_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          message_preview: string | null
+          phone_number: string
+          reminder_type: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          commitment_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_preview?: string | null
+          phone_number: string
+          reminder_type: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          commitment_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_preview?: string | null
+          phone_number?: string
+          reminder_type?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_logs_commitment_id_fkey"
+            columns: ["commitment_id"]
+            isOneToOne: false
+            referencedRelation: "commitments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pipeline_cards: {
         Row: {
           created_at: string

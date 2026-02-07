@@ -5,6 +5,37 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+async function sendWhatsApp(url: string, apiKey: string, instanceName: string, phone: string, message: string) {
+  const sendUrl = `${url}/message/sendText/${instanceName}`;
+  const res = await fetch(sendUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: apiKey },
+    body: JSON.stringify({ number: `${phone}@s.whatsapp.net`, text: message }),
+  });
+  return res;
+}
+
+async function logNotification(
+  supabase: any,
+  userId: string,
+  commitmentId: string,
+  reminderType: string,
+  phone: string,
+  message: string,
+  status: "sent" | "failed",
+  errorMessage?: string
+) {
+  await supabase.from("notification_logs").insert({
+    user_id: userId,
+    commitment_id: commitmentId,
+    reminder_type: reminderType,
+    phone_number: phone,
+    message_preview: message.substring(0, 200),
+    status,
+    error_message: errorMessage || null,
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -26,7 +57,6 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get all pending commitments
     const { data: commitmentsOnly, error } = await supabase
       .from("commitments")
       .select("*")
@@ -42,139 +72,99 @@ Deno.serve(async (req) => {
       const diffMs = commitmentDateTime.getTime() - now.getTime();
       const diffMinutes = diffMs / (1000 * 60);
 
-      // Skip if commitment already passed
       if (diffMinutes < -5) continue;
 
-      // Get user's WhatsApp number
       const { data: profile } = await supabase
         .from("profiles")
         .select("whatsapp_number, name")
         .eq("id", c.user_id)
         .single();
 
-      if (!profile?.whatsapp_number) {
-        results.push(`Skipped "${c.title}": no WhatsApp number for user ${c.user_id}`);
-        continue;
-      }
+      if (!profile?.whatsapp_number) continue;
 
       const phone = profile.whatsapp_number.replace(/\D/g, "");
       const categoryLabels: Record<string, string> = {
-        dentista: "🦷 Dentista",
-        medico: "🏥 Médico",
-        escola: "🏫 Escola",
-        trabalho: "💼 Trabalho",
-        veterinario: "🐾 Veterinário",
-        reuniao: "🤝 Reunião",
-        curso: "📚 Curso",
-        clinica: "🏨 Clínica",
-        idoso: "👴 Pessoa Idosa",
-        bebe: "👶 Mãe/Bebê",
-        namorado: "❤️ Namorado(a)",
-        pais: "👨‍👩‍👧 Pais",
-        familiares: "👨‍👩‍👧‍👦 Familiares",
-        outro: "📌 Outro",
+        dentista: "🦷 Dentista", medico: "🏥 Médico", escola: "🏫 Escola",
+        trabalho: "💼 Trabalho", veterinario: "🐾 Veterinário", reuniao: "🤝 Reunião",
+        curso: "📚 Curso", clinica: "🏨 Clínica", idoso: "👴 Pessoa Idosa",
+        bebe: "👶 Mãe/Bebê", namorado: "❤️ Namorado(a)", pais: "👨‍👩‍👧 Pais",
+        familiares: "👨‍👩‍👧‍👦 Familiares", outro: "📌 Outro",
       };
 
       const catLabel = categoryLabels[c.category] || c.category;
       const dateFormatted = new Date(c.commitment_date).toLocaleDateString("pt-BR");
       const timeFormatted = c.commitment_time.slice(0, 5);
 
-      // Check each reminder threshold (before) + on-time
+      // Helper to build message
+      const buildMessage = (unitText: string, isOnTime: boolean) => {
+        if (c.custom_message && c.custom_message.trim() && !isOnTime) {
+          return c.custom_message
+            .replace(/{nome}/gi, profile.name)
+            .replace(/{titulo}/gi, c.title)
+            .replace(/{data}/gi, dateFormatted)
+            .replace(/{horario}/gi, timeFormatted)
+            .replace(/{local}/gi, c.location || "")
+            .replace(/{profissional}/gi, c.provider_name || "")
+            .replace(/{categoria}/gi, catLabel)
+            .replace(/{tempo}/gi, unitText);
+        }
+
+        const header = isOnTime
+          ? `⏰ *Hora do compromisso!*\n\nOlá ${profile.name}! Seu compromisso é *agora*:\n\n`
+          : `⏰ *Lembrete WhatsPing*\n\nOlá ${profile.name}! Você tem um compromisso em *${unitText}*:\n\n`;
+
+        return header +
+          `${catLabel}\n` +
+          `📋 *${c.title}*\n` +
+          `📅 ${dateFormatted} às ${timeFormatted}\n` +
+          (c.provider_name ? `👤 ${c.provider_name}\n` : "") +
+          (c.location ? `📍 ${c.location}\n` : "") +
+          (c.description && !isOnTime ? `📝 ${c.description}\n` : "") +
+          `\n_Enviado automaticamente pelo WhatsPing_`;
+      };
+
+      // On-time reminder
+      if (!c.notified_ontime && diffMinutes <= 0 && diffMinutes > -5) {
+        const msg = buildMessage("", true);
+        console.log(`Sending on-time for "${c.title}" to ${phone}`);
+        const res = await sendWhatsApp(EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE_NAME, phone, msg);
+        if (res.ok) {
+          await supabase.from("commitments").update({ notified_ontime: true }).eq("id", c.id);
+          await logNotification(supabase, c.user_id, c.id, "ontime", phone, msg, "sent");
+          results.push(`✅ on-time "${c.title}"`);
+        } else {
+          const errText = await res.text();
+          await logNotification(supabase, c.user_id, c.id, "ontime", phone, msg, "failed", errText);
+          results.push(`❌ on-time "${c.title}": ${errText}`);
+        }
+      }
+
+      // Before reminders
       const reminders = [
         { type: "days", field: "notified_days", threshold: (c.remind_days_before || 0) * 24 * 60, unit: `${c.remind_days_before} dia(s)` },
         { type: "hours", field: "notified_hours", threshold: (c.remind_hours_before || 0) * 60, unit: `${c.remind_hours_before} hora(s)` },
         { type: "minutes", field: "notified_minutes", threshold: c.remind_minutes_before || 0, unit: `${c.remind_minutes_before} minuto(s)` },
       ];
 
-      // On-time reminder (at the exact commitment time)
-      if (!c.notified_ontime && diffMinutes <= 0 && diffMinutes > -5) {
-        const onTimeMsg = `⏰ *Hora do compromisso!*\n\n` +
-          `Olá ${profile.name}! Seu compromisso é *agora*:\n\n` +
-          `${catLabel}\n` +
-          `📋 *${c.title}*\n` +
-          `📅 ${dateFormatted} às ${timeFormatted}\n` +
-          (c.provider_name ? `👤 ${c.provider_name}\n` : "") +
-          (c.location ? `📍 ${c.location}\n` : "") +
-          `\n_Enviado automaticamente pelo WhatsPing_`;
-
-        const sendUrl = `${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_INSTANCE_NAME}`;
-        console.log(`Sending on-time reminder for "${c.title}" to ${phone}...`);
-        const sendRes = await fetch(sendUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", apikey: EVOLUTION_API_KEY },
-          body: JSON.stringify({ number: `${phone}@s.whatsapp.net`, text: onTimeMsg }),
-        });
-
-        if (sendRes.ok) {
-          await supabase.from("commitments").update({ notified_ontime: true }).eq("id", c.id);
-          results.push(`✅ Sent on-time reminder for "${c.title}" to ${phone}`);
-        } else {
-          const errText = await sendRes.text();
-          console.error(`Failed on-time for "${c.title}": ${errText}`);
-          results.push(`❌ Failed on-time for "${c.title}": ${errText}`);
-        }
-      }
-
       for (const reminder of reminders) {
-        const alreadyNotified = c[reminder.field];
-        if (alreadyNotified) continue;
+        if (c[reminder.field]) continue;
         if (reminder.threshold <= 0) continue;
 
-        // Send if we're within the threshold window (and commitment hasn't passed yet)
         if (diffMinutes <= reminder.threshold && diffMinutes > -5) {
-          let message: string;
+          const msg = buildMessage(reminder.unit, false);
+          console.log(`Sending ${reminder.type} for "${c.title}" to ${phone}`);
+          const res = await sendWhatsApp(EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE_NAME, phone, msg);
 
-          if (c.custom_message && c.custom_message.trim()) {
-            message = c.custom_message
-              .replace(/{nome}/gi, profile.name)
-              .replace(/{titulo}/gi, c.title)
-              .replace(/{data}/gi, dateFormatted)
-              .replace(/{horario}/gi, timeFormatted)
-              .replace(/{local}/gi, c.location || "")
-              .replace(/{profissional}/gi, c.provider_name || "")
-              .replace(/{categoria}/gi, catLabel)
-              .replace(/{tempo}/gi, reminder.unit);
-          } else {
-            message = `⏰ *Lembrete WhatsPing*\n\n` +
-              `Olá ${profile.name}! Você tem um compromisso em *${reminder.unit}*:\n\n` +
-              `${catLabel}\n` +
-              `📋 *${c.title}*\n` +
-              `📅 ${dateFormatted} às ${timeFormatted}\n` +
-              (c.provider_name ? `👤 ${c.provider_name}\n` : "") +
-              (c.location ? `📍 ${c.location}\n` : "") +
-              (c.description ? `📝 ${c.description}\n` : "") +
-              `\n_Enviado automaticamente pelo WhatsPing_`;
-          }
-
-          // Send via Evolution API
-          const sendUrl = `${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_INSTANCE_NAME}`;
-          console.log(`Sending ${reminder.type} reminder for "${c.title}" to ${phone}...`);
-
-          const sendRes = await fetch(sendUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              apikey: EVOLUTION_API_KEY,
-            },
-            body: JSON.stringify({
-              number: `${phone}@s.whatsapp.net`,
-              text: message,
-            }),
-          });
-
-          if (sendRes.ok) {
+          if (res.ok) {
             const updateField: Record<string, boolean> = {};
             updateField[`notified_${reminder.type}`] = true;
-            await supabase
-              .from("commitments")
-              .update(updateField)
-              .eq("id", c.id);
-
-            results.push(`✅ Sent ${reminder.type} reminder for "${c.title}" to ${phone}`);
+            await supabase.from("commitments").update(updateField).eq("id", c.id);
+            await logNotification(supabase, c.user_id, c.id, reminder.type, phone, msg, "sent");
+            results.push(`✅ ${reminder.type} "${c.title}"`);
           } else {
-            const errText = await sendRes.text();
-            console.error(`Failed ${reminder.type} for "${c.title}": ${errText}`);
-            results.push(`❌ Failed ${reminder.type} for "${c.title}": ${errText}`);
+            const errText = await res.text();
+            await logNotification(supabase, c.user_id, c.id, reminder.type, phone, msg, "failed", errText);
+            results.push(`❌ ${reminder.type} "${c.title}": ${errText}`);
           }
         }
       }
