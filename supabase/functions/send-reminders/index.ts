@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
       if (!firedOne && !c.notified_ontime && diffMinutes <= 0 && diffMinutes > -5) {
         const ok = await sendToAll("", true, "ontime");
         if (ok) {
-          await supabase.from("commitments").update({ notified_ontime: true }).eq("id", c.id);
+          await supabase.from("commitments").update({ notified_ontime: true, status: "done" }).eq("id", c.id);
         }
       }
     }
