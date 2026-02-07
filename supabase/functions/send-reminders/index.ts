@@ -27,135 +27,131 @@ Deno.serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Get all pending commitments
-    const { data: commitments, error } = await supabase
+    const { data: commitmentsOnly, error } = await supabase
       .from("commitments")
-      .select("*, profiles!commitments_user_id_fkey(whatsapp_number, name)")
+      .select("*")
       .eq("status", "pending");
 
-    if (error) {
-      // Fallback: get commitments without join
-      const { data: commitmentsOnly, error: err2 } = await supabase
-        .from("commitments")
-        .select("*")
-        .eq("status", "pending");
+    if (error) throw error;
 
-      if (err2) throw err2;
+    const results: string[] = [];
+    const now = new Date();
 
-      const results: string[] = [];
-      const now = new Date();
+    for (const c of commitmentsOnly || []) {
+      const commitmentDateTime = new Date(`${c.commitment_date}T${c.commitment_time}`);
+      const diffMs = commitmentDateTime.getTime() - now.getTime();
+      const diffMinutes = diffMs / (1000 * 60);
 
-      for (const c of commitmentsOnly || []) {
-        const commitmentDateTime = new Date(`${c.commitment_date}T${c.commitment_time}`);
-        const diffMs = commitmentDateTime.getTime() - now.getTime();
-        const diffMinutes = diffMs / (1000 * 60);
-        const diffHours = diffMs / (1000 * 60 * 60);
-        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      // Skip if commitment already passed
+      if (diffMinutes < -5) continue;
 
-        // Get user's WhatsApp number
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("whatsapp_number, name")
-          .eq("id", c.user_id)
-          .single();
+      // Get user's WhatsApp number
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("whatsapp_number, name")
+        .eq("id", c.user_id)
+        .single();
 
-        if (!profile?.whatsapp_number) continue;
+      if (!profile?.whatsapp_number) {
+        results.push(`Skipped "${c.title}": no WhatsApp number for user ${c.user_id}`);
+        continue;
+      }
 
-        const phone = profile.whatsapp_number.replace(/\D/g, "");
-        const categoryLabels: Record<string, string> = {
-          dentista: "🦷 Dentista",
-          medico: "🏥 Médico",
-          escola: "🏫 Escola",
-          trabalho: "💼 Trabalho",
-          veterinario: "🐾 Veterinário",
-          reuniao: "🤝 Reunião",
-          curso: "📚 Curso",
-          clinica: "🏨 Clínica",
-          idoso: "👴 Pessoa Idosa",
-          bebe: "👶 Mãe/Bebê",
-          outro: "📌 Outro",
-        };
+      const phone = profile.whatsapp_number.replace(/\D/g, "");
+      const categoryLabels: Record<string, string> = {
+        dentista: "🦷 Dentista",
+        medico: "🏥 Médico",
+        escola: "🏫 Escola",
+        trabalho: "💼 Trabalho",
+        veterinario: "🐾 Veterinário",
+        reuniao: "🤝 Reunião",
+        curso: "📚 Curso",
+        clinica: "🏨 Clínica",
+        idoso: "👴 Pessoa Idosa",
+        bebe: "👶 Mãe/Bebê",
+        namorado: "❤️ Namorado(a)",
+        pais: "👨‍👩‍👧 Pais",
+        familiares: "👨‍👩‍👧‍👦 Familiares",
+        outro: "📌 Outro",
+      };
 
-        const catLabel = categoryLabels[c.category] || c.category;
-        const dateFormatted = new Date(c.commitment_date).toLocaleDateString("pt-BR");
-        const timeFormatted = c.commitment_time.slice(0, 5);
+      const catLabel = categoryLabels[c.category] || c.category;
+      const dateFormatted = new Date(c.commitment_date).toLocaleDateString("pt-BR");
+      const timeFormatted = c.commitment_time.slice(0, 5);
 
-        // Check each reminder threshold
-        const reminders: { type: string; field: string; threshold: number; unit: string }[] = [
-          { type: "days", field: "notified_days", threshold: c.remind_days_before * 24 * 60, unit: `${c.remind_days_before} dia(s)` },
-          { type: "hours", field: "notified_hours", threshold: c.remind_hours_before * 60, unit: `${c.remind_hours_before} hora(s)` },
-          { type: "minutes", field: "notified_minutes", threshold: c.remind_minutes_before, unit: `${c.remind_minutes_before} minuto(s)` },
-        ];
+      // Check each reminder threshold
+      const reminders = [
+        { type: "days", field: "notified_days", threshold: (c.remind_days_before || 0) * 24 * 60, unit: `${c.remind_days_before} dia(s)` },
+        { type: "hours", field: "notified_hours", threshold: (c.remind_hours_before || 0) * 60, unit: `${c.remind_hours_before} hora(s)` },
+        { type: "minutes", field: "notified_minutes", threshold: c.remind_minutes_before || 0, unit: `${c.remind_minutes_before} minuto(s)` },
+      ];
 
-        for (const reminder of reminders) {
-          const alreadyNotified = c[reminder.field as keyof typeof c];
-          if (alreadyNotified) continue;
-          if (reminder.threshold <= 0) continue;
+      for (const reminder of reminders) {
+        const alreadyNotified = c[reminder.field];
+        if (alreadyNotified) continue;
+        if (reminder.threshold <= 0) continue;
 
-          // Send if we're within the threshold window (threshold + 5 min buffer)
-          if (diffMinutes <= reminder.threshold && diffMinutes > 0) {
-            let message: string;
+        // Send if we're within the threshold window (and commitment hasn't passed yet)
+        if (diffMinutes <= reminder.threshold && diffMinutes > -5) {
+          let message: string;
 
-            if (c.custom_message && c.custom_message.trim()) {
-              // Use custom message with variable substitution
-              message = c.custom_message
-                .replace(/{nome}/gi, profile.name)
-                .replace(/{titulo}/gi, c.title)
-                .replace(/{data}/gi, dateFormatted)
-                .replace(/{horario}/gi, timeFormatted)
-                .replace(/{local}/gi, c.location || "")
-                .replace(/{profissional}/gi, c.provider_name || "")
-                .replace(/{categoria}/gi, catLabel)
-                .replace(/{tempo}/gi, reminder.unit);
-            } else {
-              message = `⏰ *Lembrete WhatsPing*\n\n` +
-                `Olá ${profile.name}! Você tem um compromisso em *${reminder.unit}*:\n\n` +
-                `${catLabel}\n` +
-                `📋 *${c.title}*\n` +
-                `📅 ${dateFormatted} às ${timeFormatted}\n` +
-                (c.provider_name ? `👤 ${c.provider_name}\n` : "") +
-                (c.location ? `📍 ${c.location}\n` : "") +
-                (c.description ? `📝 ${c.description}\n` : "") +
-                `\n_Enviado automaticamente pelo WhatsPing_`;
-            }
+          if (c.custom_message && c.custom_message.trim()) {
+            message = c.custom_message
+              .replace(/{nome}/gi, profile.name)
+              .replace(/{titulo}/gi, c.title)
+              .replace(/{data}/gi, dateFormatted)
+              .replace(/{horario}/gi, timeFormatted)
+              .replace(/{local}/gi, c.location || "")
+              .replace(/{profissional}/gi, c.provider_name || "")
+              .replace(/{categoria}/gi, catLabel)
+              .replace(/{tempo}/gi, reminder.unit);
+          } else {
+            message = `⏰ *Lembrete WhatsPing*\n\n` +
+              `Olá ${profile.name}! Você tem um compromisso em *${reminder.unit}*:\n\n` +
+              `${catLabel}\n` +
+              `📋 *${c.title}*\n` +
+              `📅 ${dateFormatted} às ${timeFormatted}\n` +
+              (c.provider_name ? `👤 ${c.provider_name}\n` : "") +
+              (c.location ? `📍 ${c.location}\n` : "") +
+              (c.description ? `📝 ${c.description}\n` : "") +
+              `\n_Enviado automaticamente pelo WhatsPing_`;
+          }
 
-            // Send via Evolution API
-            const sendUrl = `${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_INSTANCE_NAME}`;
-            const sendRes = await fetch(sendUrl, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                apikey: EVOLUTION_API_KEY,
-              },
-              body: JSON.stringify({
-                number: `${phone}@s.whatsapp.net`,
-                text: message,
-              }),
-            });
+          // Send via Evolution API
+          const sendUrl = `${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_INSTANCE_NAME}`;
+          console.log(`Sending ${reminder.type} reminder for "${c.title}" to ${phone}...`);
 
-            if (sendRes.ok) {
-              // Mark as notified
-              const updateField: Record<string, boolean> = {};
-              updateField[`notified_${reminder.type}`] = true;
-              await supabase
-                .from("commitments")
-                .update(updateField)
-                .eq("id", c.id);
+          const sendRes = await fetch(sendUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: EVOLUTION_API_KEY,
+            },
+            body: JSON.stringify({
+              number: `${phone}@s.whatsapp.net`,
+              text: message,
+            }),
+          });
 
-              results.push(`Sent ${reminder.type} reminder for "${c.title}" to ${phone}`);
-            } else {
-              const errText = await sendRes.text();
-              results.push(`Failed ${reminder.type} for "${c.title}": ${errText}`);
-            }
+          if (sendRes.ok) {
+            const updateField: Record<string, boolean> = {};
+            updateField[`notified_${reminder.type}`] = true;
+            await supabase
+              .from("commitments")
+              .update(updateField)
+              .eq("id", c.id);
+
+            results.push(`✅ Sent ${reminder.type} reminder for "${c.title}" to ${phone}`);
+          } else {
+            const errText = await sendRes.text();
+            console.error(`Failed ${reminder.type} for "${c.title}": ${errText}`);
+            results.push(`❌ Failed ${reminder.type} for "${c.title}": ${errText}`);
           }
         }
       }
-
-      return new Response(JSON.stringify({ success: true, processed: results.length, details: results }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
     }
 
-    return new Response(JSON.stringify({ success: true, message: "Processed with join" }), {
+    return new Response(JSON.stringify({ success: true, processed: results.length, details: results, timestamp: now.toISOString() }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
