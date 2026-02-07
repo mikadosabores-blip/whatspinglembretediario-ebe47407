@@ -27,7 +27,10 @@ export type Database = {
           notified_days: boolean
           notified_hours: boolean
           notified_minutes: boolean
+          parent_commitment_id: string | null
           provider_name: string | null
+          recurrence: string
+          recurrence_end_date: string | null
           remind_days_before: number | null
           remind_hours_before: number | null
           remind_minutes_before: number | null
@@ -48,7 +51,10 @@ export type Database = {
           notified_days?: boolean
           notified_hours?: boolean
           notified_minutes?: boolean
+          parent_commitment_id?: string | null
           provider_name?: string | null
+          recurrence?: string
+          recurrence_end_date?: string | null
           remind_days_before?: number | null
           remind_hours_before?: number | null
           remind_minutes_before?: number | null
@@ -69,7 +75,10 @@ export type Database = {
           notified_days?: boolean
           notified_hours?: boolean
           notified_minutes?: boolean
+          parent_commitment_id?: string | null
           provider_name?: string | null
+          recurrence?: string
+          recurrence_end_date?: string | null
           remind_days_before?: number | null
           remind_hours_before?: number | null
           remind_minutes_before?: number | null
@@ -78,7 +87,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "commitments_parent_commitment_id_fkey"
+            columns: ["parent_commitment_id"]
+            isOneToOne: false
+            referencedRelation: "commitments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pipeline_cards: {
         Row: {
