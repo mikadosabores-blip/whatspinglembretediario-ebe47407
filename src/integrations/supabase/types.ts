@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      commitments: {
+        Row: {
+          category: string
+          commitment_date: string
+          commitment_time: string
+          created_at: string
+          description: string | null
+          id: string
+          location: string | null
+          notified_days: boolean
+          notified_hours: boolean
+          notified_minutes: boolean
+          provider_name: string | null
+          remind_days_before: number | null
+          remind_hours_before: number | null
+          remind_minutes_before: number | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          commitment_date: string
+          commitment_time: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          notified_days?: boolean
+          notified_hours?: boolean
+          notified_minutes?: boolean
+          provider_name?: string | null
+          remind_days_before?: number | null
+          remind_hours_before?: number | null
+          remind_minutes_before?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          commitment_date?: string
+          commitment_time?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          notified_days?: boolean
+          notified_hours?: boolean
+          notified_minutes?: boolean
+          provider_name?: string | null
+          remind_days_before?: number | null
+          remind_hours_before?: number | null
+          remind_minutes_before?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pipeline_cards: {
         Row: {
           created_at: string

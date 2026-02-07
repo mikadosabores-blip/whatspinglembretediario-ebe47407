@@ -1,67 +1,97 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { MessageCircle, LogOut } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { PipelineBoard } from "@/components/pipeline/PipelineBoard";
+import { AppLayout } from "@/components/AppLayout";
+import { useCommitments, CATEGORIES } from "@/hooks/useCommitments";
+import { CalendarClock, Bell, CheckCircle2 } from "lucide-react";
+import { format, parseISO, isToday, isTomorrow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const Dashboard = () => {
-  const [userName, setUserName] = useState("");
-  const navigate = useNavigate();
+  const { commitments, loading } = useCommitments();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/");
-        return;
-      }
-      setUserName(session.user.user_metadata?.name || "Usuário");
-    };
-
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) navigate("/");
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("Você saiu da conta.");
-    navigate("/");
-  };
+  const pending = commitments.filter((c) => c.status === "pending");
+  const today = pending.filter((c) => isToday(parseISO(c.commitment_date)));
+  const tomorrow = pending.filter((c) => isTomorrow(parseISO(c.commitment_date)));
+  const done = commitments.filter((c) => c.status === "done");
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="flex items-center justify-between px-6 py-4 border-b border-border">
-        <div className="flex items-center gap-2">
-          <MessageCircle className="w-6 h-6 text-primary" strokeWidth={2.5} />
-          <span className="text-lg font-extrabold text-foreground tracking-tight">WhatsPing</span>
-        </div>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-          Sair
-        </button>
-      </header>
+    <AppLayout>
+      <h1 className="text-2xl font-extrabold text-foreground mb-6">Dashboard</h1>
 
-      <main className="p-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-extrabold text-foreground">
-            Pipeline
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Arraste os cards entre as colunas para gerenciar seus contatos.
-          </p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="rounded-xl border bg-card p-5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Bell className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-extrabold text-foreground">{pending.length}</p>
+              <p className="text-xs text-muted-foreground">Pendentes</p>
+            </div>
+          </div>
         </div>
-        <PipelineBoard />
-      </main>
-    </div>
+        <div className="rounded-xl border bg-card p-5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <CalendarClock className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-extrabold text-foreground">{today.length}</p>
+              <p className="text-xs text-muted-foreground">Hoje</p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border bg-card p-5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-extrabold text-foreground">{done.length}</p>
+              <p className="text-xs text-muted-foreground">Concluídos</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {today.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-sm font-bold text-foreground mb-3">📅 Compromissos de Hoje</h2>
+          <div className="space-y-2">
+            {today.map((c) => {
+              const cat = CATEGORIES.find((cat) => cat.value === c.category);
+              return (
+                <div key={c.id} className="flex items-center gap-3 rounded-xl border bg-card p-3">
+                  <span className="text-lg">{cat?.emoji || "📌"}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-foreground truncate">{c.title}</p>
+                    <p className="text-xs text-muted-foreground">{c.commitment_time.slice(0, 5)} {c.provider_name && `• ${c.provider_name}`}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {tomorrow.length > 0 && (
+        <div>
+          <h2 className="text-sm font-bold text-foreground mb-3">🔜 Amanhã</h2>
+          <div className="space-y-2">
+            {tomorrow.map((c) => {
+              const cat = CATEGORIES.find((cat) => cat.value === c.category);
+              return (
+                <div key={c.id} className="flex items-center gap-3 rounded-xl border bg-card p-3">
+                  <span className="text-lg">{cat?.emoji || "📌"}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-foreground truncate">{c.title}</p>
+                    <p className="text-xs text-muted-foreground">{c.commitment_time.slice(0, 5)} {c.provider_name && `• ${c.provider_name}`}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </AppLayout>
   );
 };
 
