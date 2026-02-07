@@ -14,7 +14,7 @@ const Dashboard = () => {
 
   return (
     <AppLayout>
-      <h1 className="text-2xl font-extrabold text-foreground mb-6">Dashboard</h1>
+      
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
