@@ -20,6 +20,7 @@ interface Props {
 function CountdownDisplay({ targetDate, targetTime }: { targetDate: string; targetTime: string }) {
   const [remaining, setRemaining] = useState("");
   const [isExpired, setIsExpired] = useState(false);
+  const [progress, setProgress] = useState(100);
 
   useEffect(() => {
     const update = () => {
@@ -28,32 +29,47 @@ function CountdownDisplay({ targetDate, targetTime }: { targetDate: string; targ
 
       if (diff <= 0) {
         setIsExpired(true);
-        setRemaining("Agora!");
+        setRemaining("⏰ Agora!");
+        setProgress(0);
         return;
       }
 
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
 
       const parts: string[] = [];
       if (days > 0) parts.push(`${days}d`);
       if (hours > 0) parts.push(`${hours}h`);
-      parts.push(`${mins}min`);
+      parts.push(`${mins}m`);
+      if (days === 0) parts.push(`${secs}s`);
 
       setRemaining(parts.join(" "));
       setIsExpired(false);
+
+      // Progress: 100% at 24h+, 0% at now
+      const totalWindow = 24 * 60 * 60 * 1000;
+      setProgress(Math.min(100, (diff / totalWindow) * 100));
     };
 
     update();
-    const interval = setInterval(update, 60000);
+    const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, [targetDate, targetTime]);
 
   return (
-    <span className={cn("text-xs font-bold tabular-nums", isExpired ? "text-destructive" : "text-primary")}>
-      {remaining}
-    </span>
+    <div className="flex items-center gap-2">
+      <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+        <div
+          className={cn("h-full rounded-full transition-all duration-1000", isExpired ? "bg-destructive" : "bg-primary")}
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      <span className={cn("text-xs font-bold tabular-nums", isExpired ? "text-destructive animate-pulse" : "text-primary")}>
+        {remaining}
+      </span>
+    </div>
   );
 }
 
