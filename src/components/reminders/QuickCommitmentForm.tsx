@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { CalendarIcon, ChevronDown, ChevronUp, Repeat } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -95,21 +96,28 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
         <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Consulta Dr. Silva" className="h-9 text-sm" />
       </div>
 
-      <div className="grid grid-cols-[1fr_100px_1fr] gap-2">
+      <div className="grid grid-cols-[1fr_100px] gap-2">
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className={cn("h-9 justify-start text-left text-xs font-normal", !date && "text-muted-foreground")}>
               <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
-              {date ? format(date, "dd/MM/yyyy") : "Data"}
+              {date ? format(date, "dd 'de' MMMM, yyyy", { locale: ptBR }) : "Selecionar data"}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar mode="single" selected={date} onSelect={setDate} initialFocus className="p-3 pointer-events-auto" />
+          <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+              initialFocus
+            />
           </PopoverContent>
         </Popover>
         <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="h-9 text-xs" />
-        <Input value={providerName} onChange={(e) => setProviderName(e.target.value)} placeholder="Profissional/Clínica" className="h-9 text-sm" />
       </div>
+
+      <Input value={providerName} onChange={(e) => setProviderName(e.target.value)} placeholder="Profissional / Clínica (opcional)" className="h-9 text-sm" />
 
       {/* Recurrence row */}
       <div className="grid grid-cols-[1fr_1fr] gap-2">
