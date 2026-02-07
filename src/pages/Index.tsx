@@ -1,30 +1,72 @@
-import { ArrowUpRight, MessageCircle } from "lucide-react";
+import { useState } from "react";
+import { MessageCircle, ArrowRight, User, Phone } from "lucide-react";
 
 const Index = () => {
+  const [name, setName] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !whatsapp.trim()) return;
+    console.log("Login:", { name, whatsapp });
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-6">
-      <div className="relative w-full max-w-3xl rounded-[var(--radius)] bg-primary p-10 md:p-16 shadow-2xl overflow-hidden min-h-[480px] flex flex-col justify-between">
-        {/* Decorative subtle circle */}
-        <div className="absolute left-[-40px] top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-primary-foreground/20" />
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-2 mb-10">
+          <MessageCircle className="w-8 h-8 text-primary" strokeWidth={2.5} />
+          <span className="text-2xl font-extrabold text-foreground tracking-tight">WhatsPing</span>
+        </div>
 
-        {/* Top content */}
-        <div className="flex items-start justify-between gap-6">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-primary-foreground leading-[1.1] tracking-tight max-w-lg">
-            Like & Follow for Regular Updates.
+        {/* Card */}
+        <div className="rounded-[var(--radius)] bg-primary p-8 md:p-10 shadow-2xl">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-primary-foreground mb-2 leading-tight">
+            Acesse sua conta
           </h1>
-          <ArrowUpRight className="text-primary-foreground w-12 h-12 md:w-16 md:h-16 flex-shrink-0 mt-2" strokeWidth={2.5} />
+          <p className="text-primary-foreground/70 text-sm mb-8">
+            Entre com seu nome e WhatsApp para continuar
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Seu nome"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full rounded-lg bg-primary-foreground text-foreground placeholder:text-muted-foreground pl-12 pr-4 py-3.5 text-sm font-medium outline-none focus:ring-2 focus:ring-accent"
+                required
+              />
+            </div>
+
+            <div className="relative">
+              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type="tel"
+                placeholder="WhatsApp (ex: 11999999999)"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
+                className="w-full rounded-lg bg-primary-foreground text-foreground placeholder:text-muted-foreground pl-12 pr-4 py-3.5 text-sm font-medium outline-none focus:ring-2 focus:ring-accent"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-foreground text-background font-bold py-3.5 text-sm hover:opacity-90 transition-opacity mt-2"
+            >
+              Entrar
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </form>
         </div>
 
-        {/* Bottom bar */}
-        <div className="flex items-end justify-between mt-16">
-          <p className="text-primary-foreground/70 text-sm md:text-base">
-            More information on <span className="underline underline-offset-2">whatsping.com</span>
-          </p>
-          <div className="flex items-center gap-2 text-primary-foreground">
-            <MessageCircle className="w-6 h-6" strokeWidth={2.5} />
-            <span className="text-lg md:text-xl font-bold tracking-tight">WhatsPing</span>
-          </div>
-        </div>
+        <p className="text-center text-muted-foreground text-xs mt-6">
+          © 2026 WhatsPing. Todos os direitos reservados.
+        </p>
       </div>
     </div>
   );
