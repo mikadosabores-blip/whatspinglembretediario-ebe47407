@@ -69,6 +69,7 @@ export function ContactsManager() {
       name: newName.trim(),
       whatsapp_number: newWhatsapp,
       label: newLabel,
+      profile_pic_url: checkResult?.profilePicUrl || undefined,
     });
     if (success) {
       setNewName("");
@@ -137,7 +138,15 @@ export function ContactsManager() {
                 className="flex items-center gap-3 rounded-xl border bg-background p-3 shadow-sm"
               >
                 {/* Avatar */}
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                {contact.profile_pic_url ? (
+                  <img
+                    src={contact.profile_pic_url}
+                    alt={contact.name}
+                    className="h-10 w-10 rounded-full object-cover shrink-0"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }}
+                  />
+                ) : null}
+                <div className={`h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 ${contact.profile_pic_url ? 'hidden' : ''}`}>
                   <span className="text-xs font-bold text-primary">{getInitials(contact.name)}</span>
                 </div>
 
@@ -203,17 +212,31 @@ export function ContactsManager() {
             </div>
             {/* Check result feedback */}
             {checkResult && (
-              <div className={`flex items-center gap-2 mt-2 text-xs font-medium ${checkResult.exists ? "text-emerald-600" : "text-destructive"}`}>
+              <div className={`flex items-center gap-3 mt-2 p-2 rounded-lg ${checkResult.exists ? "bg-emerald-50 dark:bg-emerald-950/20" : "bg-destructive/5"}`}>
                 {checkResult.exists ? (
                   <>
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>WhatsApp encontrado{checkResult.profileName ? ` — ${checkResult.profileName}` : ""}</span>
+                    {checkResult.profilePicUrl && (
+                      <img
+                        src={checkResult.profilePicUrl}
+                        alt="Foto do perfil"
+                        className="h-10 w-10 rounded-full object-cover shrink-0 border-2 border-emerald-500"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        <span>WhatsApp encontrado</span>
+                      </div>
+                      {checkResult.profileName && (
+                        <p className="text-xs text-muted-foreground mt-0.5">Perfil: {checkResult.profileName}</p>
+                      )}
+                    </div>
                   </>
                 ) : (
-                  <>
-                    <XCircle className="h-4 w-4" />
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-destructive">
+                    <XCircle className="h-3.5 w-3.5" />
                     <span>Número não encontrado no WhatsApp</span>
-                  </>
+                  </div>
                 )}
               </div>
             )}
