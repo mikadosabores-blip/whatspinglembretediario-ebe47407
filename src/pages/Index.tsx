@@ -1,15 +1,65 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MessageCircle, ArrowRight, User, Phone } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Index = () => {
   const [tab, setTab] = useState<"login" | "cadastro">("login");
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleCadastro = async () => {
+    const email = `${whatsapp.replace(/\D/g, "")}@whatsping.app`;
+    const { error } = await supabase.auth.signUp({
+      email,
+      password: whatsapp.replace(/\D/g, ""),
+      options: {
+        data: { name, whatsapp_number: whatsapp },
+      },
+    });
+    if (error) {
+      if (error.message.includes("already registered")) {
+        toast.error("Este WhatsApp já está cadastrado. Faça login.");
+      } else {
+        toast.error(error.message);
+      }
+      return;
+    }
+    toast.success("Cadastro realizado! Você já está logado.");
+    navigate("/dashboard");
+  };
+
+  const handleLogin = async () => {
+    const email = `${whatsapp.replace(/\D/g, "")}@whatsping.app`;
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password: whatsapp.replace(/\D/g, ""),
+    });
+    if (error) {
+      toast.error("WhatsApp não encontrado ou dados incorretos.");
+      return;
+    }
+    toast.success("Login realizado com sucesso!");
+    navigate("/dashboard");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !whatsapp.trim()) return;
-    console.log(tab === "login" ? "Login:" : "Cadastro:", { name, whatsapp });
+    if (!whatsapp.trim()) return;
+    if (tab === "cadastro" && !name.trim()) return;
+    setLoading(true);
+    try {
+      if (tab === "cadastro") {
+        await handleCadastro();
+      } else {
+        await handleLogin();
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,22 +104,24 @@ const Index = () => {
           </h1>
           <p className="text-primary-foreground/70 text-sm mb-8">
             {tab === "login"
-              ? "Entre com seu nome e WhatsApp para continuar"
+              ? "Entre com seu WhatsApp para continuar"
               : "Preencha seus dados para começar a usar"}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Seu nome"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg bg-primary-foreground text-foreground placeholder:text-muted-foreground pl-12 pr-4 py-3.5 text-sm font-medium outline-none focus:ring-2 focus:ring-accent"
-                required
-              />
-            </div>
+            {tab === "cadastro" && (
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Seu nome"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full rounded-lg bg-primary-foreground text-foreground placeholder:text-muted-foreground pl-12 pr-4 py-3.5 text-sm font-medium outline-none focus:ring-2 focus:ring-accent"
+                  required
+                />
+              </div>
+            )}
 
             <div className="relative">
               <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -85,10 +137,11 @@ const Index = () => {
 
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 rounded-lg bg-foreground text-background font-bold py-3.5 text-sm hover:opacity-90 transition-opacity mt-2"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-foreground text-background font-bold py-3.5 text-sm hover:opacity-90 transition-opacity mt-2 disabled:opacity-50"
             >
-              {tab === "login" ? "Entrar" : "Cadastrar"}
-              <ArrowRight className="w-4 h-4" />
+              {loading ? "Aguarde..." : tab === "login" ? "Entrar" : "Cadastrar"}
+              {!loading && <ArrowRight className="w-4 h-4" />}
             </button>
           </form>
         </div>
