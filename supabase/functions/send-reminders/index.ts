@@ -121,8 +121,21 @@ Deno.serve(async (req) => {
 
       // Helper to build message
       const buildMessage = (recipientName: string, unitText: string, isOnTime: boolean) => {
-        if (c.custom_message && c.custom_message.trim() && !isOnTime) {
-          return c.custom_message
+        const header = isOnTime
+          ? `⏰ *Hora do compromisso!*\n\nOlá ${recipientName}! Seu compromisso é *agora*:\n\n`
+          : `⏰ *Lembrete WhatsPing*\n\nOlá ${recipientName}! Você tem um compromisso em *${unitText}*:\n\n`;
+
+        let msg = header +
+          `${catLabel}\n` +
+          `📋 *${c.title}*\n` +
+          `📅 ${dateFormatted} às ${timeFormatted}\n` +
+          (c.provider_name ? `👤 ${c.provider_name}\n` : "") +
+          (c.location ? `📍 ${c.location}\n` : "") +
+          (c.description ? `📝 ${c.description}\n` : "");
+
+        // Append custom message if provided
+        if (c.custom_message && c.custom_message.trim()) {
+          const customText = c.custom_message
             .replace(/{nome}/gi, recipientName)
             .replace(/{titulo}/gi, c.title)
             .replace(/{data}/gi, dateFormatted)
@@ -131,20 +144,11 @@ Deno.serve(async (req) => {
             .replace(/{profissional}/gi, c.provider_name || "")
             .replace(/{categoria}/gi, catLabel)
             .replace(/{tempo}/gi, unitText);
+          msg += `\n💬 ${customText}\n`;
         }
 
-        const header = isOnTime
-          ? `⏰ *Hora do compromisso!*\n\nOlá ${recipientName}! Seu compromisso é *agora*:\n\n`
-          : `⏰ *Lembrete WhatsPing*\n\nOlá ${recipientName}! Você tem um compromisso em *${unitText}*:\n\n`;
-
-        return header +
-          `${catLabel}\n` +
-          `📋 *${c.title}*\n` +
-          `📅 ${dateFormatted} às ${timeFormatted}\n` +
-          (c.provider_name ? `👤 ${c.provider_name}\n` : "") +
-          (c.location ? `📍 ${c.location}\n` : "") +
-          (c.description && !isOnTime ? `📝 ${c.description}\n` : "") +
-          `\n_WhatsPing – Lembretes inteligentes para o seu dia_`;
+        msg += `\n_WhatsPing – Lembretes inteligentes para o seu dia_`;
+        return msg;
       };
 
       // Helper to send message to all recipients
