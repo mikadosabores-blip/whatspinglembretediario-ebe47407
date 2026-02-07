@@ -40,8 +40,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r border-border">
-      <div className="flex items-center justify-center py-4 border-b border-border">
-        <MessageCircle className="w-6 h-6 text-primary" strokeWidth={2.5} />
+      <div className="flex items-center justify-center gap-2 py-4 border-b border-border">
+        <MessageCircle className="w-5 h-5 text-primary" strokeWidth={2.5} />
+        <span className="text-sm font-bold text-foreground tracking-tight">WhatsPing</span>
       </div>
 
       <SidebarContent>
