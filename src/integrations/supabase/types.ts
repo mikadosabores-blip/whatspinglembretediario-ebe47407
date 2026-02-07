@@ -20,6 +20,7 @@ export type Database = {
           commitment_date: string
           commitment_time: string
           created_at: string
+          custom_message: string | null
           description: string | null
           id: string
           location: string | null
@@ -40,6 +41,7 @@ export type Database = {
           commitment_date: string
           commitment_time: string
           created_at?: string
+          custom_message?: string | null
           description?: string | null
           id?: string
           location?: string | null
@@ -60,6 +62,7 @@ export type Database = {
           commitment_date?: string
           commitment_time?: string
           created_at?: string
+          custom_message?: string | null
           description?: string | null
           id?: string
           location?: string | null

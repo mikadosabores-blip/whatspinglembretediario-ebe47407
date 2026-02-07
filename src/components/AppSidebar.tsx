@@ -1,4 +1,4 @@
-import { CalendarClock, LayoutDashboard, Users, Settings, Bell, Building2, GraduationCap, LogOut, MessageCircle } from "lucide-react";
+import { CalendarClock, LayoutDashboard, Users, Settings, Bell, Building2, GraduationCap, LogOut, MessageCircle, Heart, Baby } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -25,6 +25,8 @@ const categoryItems = [
   { title: "Prestadores", url: "/providers", icon: Building2 },
   { title: "Contatos", url: "/contacts", icon: Users },
   { title: "Cursos", url: "/courses", icon: GraduationCap },
+  { title: "Namorados", url: "/partners", icon: Heart },
+  { title: "Pais & Família", url: "/family", icon: Baby },
 ];
 
 export function AppSidebar() {

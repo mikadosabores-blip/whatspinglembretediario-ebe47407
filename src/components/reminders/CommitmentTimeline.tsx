@@ -6,6 +6,7 @@ import { CATEGORIES, type Commitment } from "@/hooks/useCommitments";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -97,6 +98,7 @@ function EditableCard({ commitment, onSave, onCancel }: {
   const [time, setTime] = useState(commitment.commitment_time.slice(0, 5));
   const [location, setLocation] = useState(commitment.location);
   const [providerName, setProviderName] = useState(commitment.provider_name);
+  const [customMessage, setCustomMessage] = useState(commitment.custom_message || "");
   const [remindDays, setRemindDays] = useState(commitment.remind_days_before);
   const [remindHours, setRemindHours] = useState(commitment.remind_hours_before);
   const [remindMinutes, setRemindMinutes] = useState(commitment.remind_minutes_before);
@@ -110,6 +112,7 @@ function EditableCard({ commitment, onSave, onCancel }: {
       commitment_time: time,
       location,
       provider_name: providerName,
+      custom_message: customMessage,
       remind_days_before: remindDays,
       remind_hours_before: remindHours,
       remind_minutes_before: remindMinutes,
@@ -148,6 +151,10 @@ function EditableCard({ commitment, onSave, onCancel }: {
 
       <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Endereço" className="h-8 text-sm" />
       <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Observações" rows={2} className="text-sm" />
+      <div>
+        <Label className="text-xs font-semibold text-card-foreground">💬 Texto do lembrete no WhatsApp</Label>
+        <Textarea value={customMessage} onChange={(e) => setCustomMessage(e.target.value)} placeholder="Texto personalizado (deixe vazio para padrão)" rows={2} className="text-sm mt-1" />
+      </div>
 
       <div className="grid grid-cols-3 gap-2">
         <Select value={String(remindDays)} onValueChange={(v) => setRemindDays(Number(v))}>

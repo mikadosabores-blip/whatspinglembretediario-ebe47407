@@ -19,6 +19,7 @@ export interface Commitment {
   notified_days: boolean;
   notified_hours: boolean;
   notified_minutes: boolean;
+  custom_message: string;
   created_at: string;
   updated_at: string;
 }
@@ -32,6 +33,9 @@ export const CATEGORIES = [
   { value: "reuniao", label: "Reunião", emoji: "🤝" },
   { value: "curso", label: "Curso", emoji: "📚" },
   { value: "clinica", label: "Clínica", emoji: "🏨" },
+  { value: "namorado", label: "Namorado(a)", emoji: "❤️" },
+  { value: "pais", label: "Pais", emoji: "👨‍👩‍👧" },
+  { value: "familiares", label: "Familiares", emoji: "👨‍👩‍👧‍👦" },
   { value: "idoso", label: "Pessoa Idosa", emoji: "👴" },
   { value: "bebe", label: "Mãe/Bebê", emoji: "👶" },
   { value: "outro", label: "Outro", emoji: "📌" },

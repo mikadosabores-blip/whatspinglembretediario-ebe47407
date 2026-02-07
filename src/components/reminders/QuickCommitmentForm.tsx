@@ -20,6 +20,7 @@ interface Props {
     commitment_time: string;
     location: string;
     provider_name: string;
+    custom_message: string;
     remind_days_before: number;
     remind_hours_before: number;
     remind_minutes_before: number;
@@ -35,6 +36,7 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
   const [time, setTime] = useState("09:00");
   const [location, setLocation] = useState("");
   const [providerName, setProviderName] = useState("");
+  const [customMessage, setCustomMessage] = useState("");
   const [remindDays, setRemindDays] = useState(1);
   const [remindHours, setRemindHours] = useState(2);
   const [remindMinutes, setRemindMinutes] = useState(30);
@@ -51,6 +53,7 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
       commitment_time: time,
       location,
       provider_name: providerName,
+      custom_message: customMessage,
       remind_days_before: remindDays,
       remind_hours_before: remindHours,
       remind_minutes_before: remindMinutes,
@@ -64,6 +67,7 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
     setTime("09:00");
     setLocation("");
     setProviderName("");
+    setCustomMessage("");
     setShowMore(false);
   };
 
@@ -143,6 +147,16 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
             rows={2}
             className="text-sm"
           />
+          <div>
+            <Label className="text-xs font-semibold text-card-foreground">💬 Texto do lembrete no WhatsApp</Label>
+            <Textarea
+              value={customMessage}
+              onChange={(e) => setCustomMessage(e.target.value)}
+              placeholder="Ex: Não esqueça de levar os documentos! (deixe vazio para usar mensagem padrão)"
+              rows={2}
+              className="text-sm mt-1"
+            />
+          </div>
           <div>
             <Label className="text-xs font-semibold text-card-foreground">Lembretes automáticos</Label>
             <div className="grid grid-cols-3 gap-2 mt-1">
