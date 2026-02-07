@@ -16,34 +16,22 @@ const Dashboard = () => {
     <AppLayout>
       
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="rounded-xl border bg-card p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Bell className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-2xl font-extrabold text-card-foreground">{pending.length}</p>
-            <p className="text-xs text-muted-foreground">Pendentes</p>
-          </div>
+      {/* Stats - inline compact */}
+      <div className="flex items-center gap-6 mb-6 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Bell className="h-4 w-4 text-primary" />
+          <span className="text-lg font-bold text-foreground">{pending.length}</span>
+          <span className="text-xs text-muted-foreground">Pendentes</span>
         </div>
-        <div className="rounded-xl border bg-card p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <CalendarClock className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-2xl font-extrabold text-card-foreground">{today.length}</p>
-            <p className="text-xs text-muted-foreground">Hoje</p>
-          </div>
+        <div className="flex items-center gap-2">
+          <CalendarClock className="h-4 w-4 text-primary" />
+          <span className="text-lg font-bold text-foreground">{today.length}</span>
+          <span className="text-xs text-muted-foreground">Hoje</span>
         </div>
-        <div className="rounded-xl border bg-card p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <CheckCircle2 className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-2xl font-extrabold text-card-foreground">{done.length}</p>
-            <p className="text-xs text-muted-foreground">Concluídos</p>
-          </div>
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 text-primary" />
+          <span className="text-lg font-bold text-foreground">{done.length}</span>
+          <span className="text-xs text-muted-foreground">Concluídos</span>
         </div>
       </div>
 
