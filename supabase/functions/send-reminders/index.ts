@@ -143,17 +143,48 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Before reminders
+      // Before reminders - sorted descending so we find the right window
       const reminders = [
         { type: "days", field: "notified_days", threshold: (c.remind_days_before || 0) * 24 * 60, unit: `${c.remind_days_before} dia(s)` },
         { type: "hours", field: "notified_hours", threshold: (c.remind_hours_before || 0) * 60, unit: `${c.remind_hours_before} hora(s)` },
         { type: "minutes", field: "notified_minutes", threshold: c.remind_minutes_before || 0, unit: `${c.remind_minutes_before} minuto(s)` },
-      ];
+      ].filter(r => r.threshold > 0).sort((a, b) => b.threshold - a.threshold);
 
+      // Find the next reminder that should fire:
+      // Each reminder fires when diffMinutes drops below its threshold,
+      // but only if the PREVIOUS (larger) reminder was already sent
       for (const reminder of reminders) {
-        if (c[reminder.field]) continue;
-        if (reminder.threshold <= 0) continue;
+        if (c[reminder.field]) continue; // already sent
 
+        // Check if all larger reminders have been sent
+        const largerReminders = reminders.filter(r => r.threshold > reminder.threshold);
+        const allLargerSent = largerReminders.every(r => c[r.field]);
+
+        if (!allLargerSent && largerReminders.length > 0) {
+          // A larger reminder hasn't been sent yet - send that one first
+          // Find the largest unsent reminder
+          const unsentLarger = largerReminders.find(r => !c[r.field]);
+          if (unsentLarger && diffMinutes <= unsentLarger.threshold && diffMinutes > -5) {
+            const msg = buildMessage(unsentLarger.unit, false);
+            console.log(`Sending ${unsentLarger.type} for "${c.title}" to ${phone}`);
+            const res = await sendWhatsApp(EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE_NAME, phone, msg);
+            if (res.ok) {
+              const updateField: Record<string, boolean> = {};
+              updateField[`notified_${unsentLarger.type}`] = true;
+              await supabase.from("commitments").update(updateField).eq("id", c.id);
+              c[unsentLarger.field] = true; // update local state
+              await logNotification(supabase, c.user_id, c.id, unsentLarger.type, phone, msg, "sent");
+              results.push(`✅ ${unsentLarger.type} "${c.title}"`);
+            } else {
+              const errText = await res.text();
+              await logNotification(supabase, c.user_id, c.id, unsentLarger.type, phone, msg, "failed", errText);
+              results.push(`❌ ${unsentLarger.type} "${c.title}": ${errText}`);
+            }
+          }
+          break; // Only send one reminder per cycle
+        }
+
+        // All larger reminders sent, check if this one should fire
         if (diffMinutes <= reminder.threshold && diffMinutes > -5) {
           const msg = buildMessage(reminder.unit, false);
           console.log(`Sending ${reminder.type} for "${c.title}" to ${phone}`);
@@ -170,7 +201,9 @@ Deno.serve(async (req) => {
             await logNotification(supabase, c.user_id, c.id, reminder.type, phone, msg, "failed", errText);
             results.push(`❌ ${reminder.type} "${c.title}": ${errText}`);
           }
+          break; // Only send one reminder per cycle
         }
+        break; // Not time yet for this reminder
       }
     }
 
