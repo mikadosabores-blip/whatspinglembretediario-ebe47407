@@ -40,22 +40,22 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r border-border">
-      <div className="flex items-center justify-center gap-2 py-4 border-b border-border">
-        <MessageCircle className="w-5 h-5 text-primary" strokeWidth={2.5} />
-        <span className="text-sm font-bold text-foreground tracking-tight">WhatsPing</span>
+      <div className="flex items-center justify-center gap-3 py-5 border-b border-border">
+        <MessageCircle className="w-6 h-6 text-primary" strokeWidth={2.5} />
+        <span className="text-base font-bold text-foreground tracking-tight">WhatsPing</span>
       </div>
 
       <SidebarContent>
-        <SidebarMenu className="px-2 py-2 space-y-1">
+        <SidebarMenu className="px-2 py-3 space-y-1">
           {allItems.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild>
+              <SidebarMenuButton asChild size="lg">
                 <NavLink
                   to={item.url}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
                   activeClassName="bg-primary/10 text-primary font-semibold"
                 >
-                  <item.icon className={`h-5 w-5 shrink-0 ${item.color}`} />
+                  <item.icon className={`!h-5 !w-5 shrink-0 ${item.color}`} />
                   <span className="truncate">{item.title}</span>
                 </NavLink>
               </SidebarMenuButton>
@@ -63,13 +63,13 @@ export function AppSidebar() {
           ))}
 
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton asChild size="lg">
               <NavLink
                 to="/settings"
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+                className="flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
                 activeClassName="bg-primary/10 text-primary font-semibold"
               >
-                <Settings className="h-5 w-5 shrink-0 text-muted-foreground" />
+                <Settings className="!h-5 !w-5 shrink-0 text-muted-foreground" />
                 <span className="truncate">Configurações</span>
               </NavLink>
             </SidebarMenuButton>
@@ -80,7 +80,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-3 px-4 py-4 w-full text-base text-muted-foreground hover:text-foreground transition-colors"
         >
           <LogOut className="h-5 w-5 shrink-0" />
           <span>Sair</span>
