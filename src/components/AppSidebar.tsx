@@ -11,7 +11,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, color: "text-blue-500" },
@@ -40,69 +39,51 @@ export function AppSidebar() {
   const allItems = [...mainItems, ...categoryItems];
 
   return (
-    <Sidebar className="border-r border-border w-16">
+    <Sidebar className="border-r border-border">
       <div className="flex items-center justify-center py-4 border-b border-border">
         <MessageCircle className="w-6 h-6 text-primary" strokeWidth={2.5} />
       </div>
 
       <SidebarContent>
-        <SidebarMenu className="px-2 py-2 space-y-1">
+        <SidebarMenu className="px-1 py-2 space-y-0.5">
           {allItems.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className="flex items-center justify-center p-2 rounded-lg hover:bg-accent/50 transition-colors"
-                      activeClassName="bg-primary/10"
-                    >
-                      <item.icon className={`h-5 w-5 ${item.color}`} />
-                    </NavLink>
-                  </SidebarMenuButton>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {item.title}
-                </TooltipContent>
-              </Tooltip>
+              <SidebarMenuButton asChild>
+                <NavLink
+                  to={item.url}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+                  activeClassName="bg-primary/10 text-primary font-semibold"
+                >
+                  <item.icon className={`h-4 w-4 shrink-0 ${item.color}`} />
+                  <span className="truncate">{item.title}</span>
+                </NavLink>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
 
           <SidebarMenuItem>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <SidebarMenuButton asChild>
-                  <NavLink
-                    to="/settings"
-                    className="flex items-center justify-center p-2 rounded-lg hover:bg-accent/50 transition-colors"
-                    activeClassName="bg-primary/10"
-                  >
-                    <Settings className="h-5 w-5 text-muted-foreground" />
-                  </NavLink>
-                </SidebarMenuButton>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                Configurações
-              </TooltipContent>
-            </Tooltip>
+            <SidebarMenuButton asChild>
+              <NavLink
+                to="/settings"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+                activeClassName="bg-primary/10 text-primary font-semibold"
+              >
+                <Settings className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="truncate">Configurações</span>
+              </NavLink>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
 
       <SidebarFooter>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={handleLogout}
-              className="flex items-center justify-center p-2 w-full text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            Sair
-          </TooltipContent>
-        </Tooltip>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-3 py-2 w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          <span>Sair</span>
+        </button>
       </SidebarFooter>
     </Sidebar>
   );
