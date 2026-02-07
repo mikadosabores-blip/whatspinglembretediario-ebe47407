@@ -3,9 +3,6 @@ import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -14,20 +11,21 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const mainItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Lembretes", url: "/reminders", icon: Bell },
-  { title: "Agenda", url: "/agenda", icon: CalendarClock },
-  { title: "Histórico", url: "/history", icon: History },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, color: "text-blue-500" },
+  { title: "Lembretes", url: "/reminders", icon: Bell, color: "text-amber-500" },
+  { title: "Agenda", url: "/agenda", icon: CalendarClock, color: "text-emerald-500" },
+  { title: "Histórico", url: "/history", icon: History, color: "text-purple-500" },
 ];
 
 const categoryItems = [
-  { title: "Prestadores", url: "/category/providers", icon: Building2 },
-  { title: "Contatos", url: "/category/contacts", icon: Users },
-  { title: "Cursos", url: "/category/courses", icon: GraduationCap },
-  { title: "Namorado", url: "/category/partners", icon: Heart },
-  { title: "Pais & Família", url: "/category/family", icon: Baby },
+  { title: "Prestadores", url: "/category/providers", icon: Building2, color: "text-slate-500" },
+  { title: "Contatos", url: "/category/contacts", icon: Users, color: "text-cyan-500" },
+  { title: "Cursos", url: "/category/courses", icon: GraduationCap, color: "text-orange-500" },
+  { title: "Namorado", url: "/category/partners", icon: Heart, color: "text-rose-500" },
+  { title: "Pais & Família", url: "/category/family", icon: Baby, color: "text-pink-400" },
 ];
 
 export function AppSidebar() {
@@ -39,86 +37,72 @@ export function AppSidebar() {
     navigate("/");
   };
 
+  const allItems = [...mainItems, ...categoryItems];
+
   return (
-    <Sidebar className="border-r border-border">
-      <div className="flex items-center gap-2 px-4 py-5 border-b border-border">
+    <Sidebar className="border-r border-border w-16">
+      <div className="flex items-center justify-center py-4 border-b border-border">
         <MessageCircle className="w-6 h-6 text-primary" strokeWidth={2.5} />
-        <span className="text-lg font-extrabold text-foreground tracking-tight">WhatsPing</span>
       </div>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+        <SidebarMenu className="px-2 py-2 space-y-1">
+          {allItems.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
-                      activeClassName="bg-primary/10 text-primary font-semibold"
+                      className="flex items-center justify-center p-2 rounded-lg hover:bg-accent/50 transition-colors"
+                      activeClassName="bg-primary/10"
                     >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <item.icon className={`h-5 w-5 ${item.color}`} />
                     </NavLink>
                   </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {item.title}
+                </TooltipContent>
+              </Tooltip>
+            </SidebarMenuItem>
+          ))}
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Categorias</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {categoryItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
-                      activeClassName="bg-primary/10 text-primary font-semibold"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
+          <SidebarMenuItem>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <SidebarMenuButton asChild>
                   <NavLink
                     to="/settings"
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
-                    activeClassName="bg-primary/10 text-primary font-semibold"
+                    className="flex items-center justify-center p-2 rounded-lg hover:bg-accent/50 transition-colors"
+                    activeClassName="bg-primary/10"
                   >
-                    <Settings className="h-4 w-4" />
-                    <span>Configurações</span>
+                    <Settings className="h-5 w-5 text-muted-foreground" />
                   </NavLink>
                 </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                Configurações
+              </TooltipContent>
+            </Tooltip>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarContent>
 
       <SidebarFooter>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <LogOut className="h-4 w-4" />
-          <span>Sair</span>
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={handleLogout}
+              className="flex items-center justify-center p-2 w-full text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            Sair
+          </TooltipContent>
+        </Tooltip>
       </SidebarFooter>
     </Sidebar>
   );
