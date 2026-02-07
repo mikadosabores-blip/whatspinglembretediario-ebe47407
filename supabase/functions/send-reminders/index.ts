@@ -93,15 +93,30 @@ Deno.serve(async (req) => {
 
           // Send if we're within the threshold window (threshold + 5 min buffer)
           if (diffMinutes <= reminder.threshold && diffMinutes > 0) {
-            const message = `⏰ *Lembrete WhatsPing*\n\n` +
-              `Olá ${profile.name}! Você tem um compromisso em *${reminder.unit}*:\n\n` +
-              `${catLabel}\n` +
-              `📋 *${c.title}*\n` +
-              `📅 ${dateFormatted} às ${timeFormatted}\n` +
-              (c.provider_name ? `👤 ${c.provider_name}\n` : "") +
-              (c.location ? `📍 ${c.location}\n` : "") +
-              (c.description ? `📝 ${c.description}\n` : "") +
-              `\n_Enviado automaticamente pelo WhatsPing_`;
+            let message: string;
+
+            if (c.custom_message && c.custom_message.trim()) {
+              // Use custom message with variable substitution
+              message = c.custom_message
+                .replace(/{nome}/gi, profile.name)
+                .replace(/{titulo}/gi, c.title)
+                .replace(/{data}/gi, dateFormatted)
+                .replace(/{horario}/gi, timeFormatted)
+                .replace(/{local}/gi, c.location || "")
+                .replace(/{profissional}/gi, c.provider_name || "")
+                .replace(/{categoria}/gi, catLabel)
+                .replace(/{tempo}/gi, reminder.unit);
+            } else {
+              message = `⏰ *Lembrete WhatsPing*\n\n` +
+                `Olá ${profile.name}! Você tem um compromisso em *${reminder.unit}*:\n\n` +
+                `${catLabel}\n` +
+                `📋 *${c.title}*\n` +
+                `📅 ${dateFormatted} às ${timeFormatted}\n` +
+                (c.provider_name ? `👤 ${c.provider_name}\n` : "") +
+                (c.location ? `📍 ${c.location}\n` : "") +
+                (c.description ? `📝 ${c.description}\n` : "") +
+                `\n_Enviado automaticamente pelo WhatsPing_`;
+            }
 
             // Send via Evolution API
             const sendUrl = `${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_INSTANCE_NAME}`;
