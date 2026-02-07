@@ -22,11 +22,11 @@ const mainItems = [
 ];
 
 const categoryItems = [
-  { title: "Prestadores", url: "/providers", icon: Building2 },
-  { title: "Contatos", url: "/contacts", icon: Users },
-  { title: "Cursos", url: "/courses", icon: GraduationCap },
-  { title: "Namorados", url: "/partners", icon: Heart },
-  { title: "Pais & Família", url: "/family", icon: Baby },
+  { title: "Prestadores", url: "/category/providers", icon: Building2 },
+  { title: "Contatos", url: "/category/contacts", icon: Users },
+  { title: "Cursos", url: "/category/courses", icon: GraduationCap },
+  { title: "Namorados", url: "/category/partners", icon: Heart },
+  { title: "Pais & Família", url: "/category/family", icon: Baby },
 ];
 
 export function AppSidebar() {
