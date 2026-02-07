@@ -236,6 +236,7 @@ export type Database = {
           id: string
           label: string
           name: string
+          profile_pic_url: string | null
           user_id: string
           whatsapp_number: string
         }
@@ -244,6 +245,7 @@ export type Database = {
           id?: string
           label?: string
           name: string
+          profile_pic_url?: string | null
           user_id: string
           whatsapp_number: string
         }
@@ -252,6 +254,7 @@ export type Database = {
           id?: string
           label?: string
           name?: string
+          profile_pic_url?: string | null
           user_id?: string
           whatsapp_number?: string
         }

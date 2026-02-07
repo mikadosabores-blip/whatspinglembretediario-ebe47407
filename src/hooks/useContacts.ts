@@ -8,6 +8,7 @@ export interface UserContact {
   name: string;
   whatsapp_number: string;
   label: string;
+  profile_pic_url: string | null;
   created_at: string;
 }
 
@@ -42,7 +43,7 @@ export function useContacts() {
     fetchContacts();
   }, [fetchContacts]);
 
-  const addContact = async (contact: { name: string; whatsapp_number: string; label: string }) => {
+  const addContact = async (contact: { name: string; whatsapp_number: string; label: string; profile_pic_url?: string }) => {
     if (contacts.length >= MAX_CONTACTS) {
       toast.error(`Máximo de ${MAX_CONTACTS} contatos permitido`);
       return false;
@@ -56,7 +57,8 @@ export function useContacts() {
       name: contact.name.trim(),
       whatsapp_number: contact.whatsapp_number.replace(/\D/g, ""),
       label: contact.label,
-    });
+      profile_pic_url: contact.profile_pic_url || null,
+    } as any);
 
     if (error) {
       toast.error("Erro ao adicionar contato");
