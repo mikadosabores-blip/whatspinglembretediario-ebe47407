@@ -7,7 +7,7 @@ import { toast } from "sonner";
 const Index = () => {
   const [tab, setTab] = useState<"login" | "cadastro">("login");
   const [name, setName] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
+  const [whatsapp, setWhatsapp] = useState("55");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -125,12 +125,16 @@ const Index = () => {
 
             <div className="relative">
               <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <span className="absolute left-12 top-1/2 -translate-y-1/2 text-sm font-medium text-foreground select-none">+</span>
               <input
                 type="tel"
-                placeholder="WhatsApp (ex: 11999999999)"
+                placeholder="5511999999999"
                 value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                className="w-full rounded-lg bg-primary-foreground text-foreground placeholder:text-muted-foreground pl-12 pr-4 py-3.5 text-sm font-medium outline-none focus:ring-2 focus:ring-accent"
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setWhatsapp(val);
+                }}
+                className="w-full rounded-lg bg-primary-foreground text-foreground placeholder:text-muted-foreground pl-[3.75rem] pr-4 py-3.5 text-sm font-medium outline-none focus:ring-2 focus:ring-accent"
                 required
               />
             </div>
