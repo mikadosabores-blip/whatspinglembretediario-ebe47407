@@ -1,16 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, ChevronDown, ChevronUp, Repeat } from "lucide-react";
+import { CalendarIcon, ChevronDown, ChevronUp, Repeat, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CATEGORIES, RECURRENCE_OPTIONS } from "@/hooks/useCommitments";
+import { useContacts, CONTACT_LABELS } from "@/hooks/useContacts";
 
 interface Props {
   onSubmit: (data: {
@@ -28,6 +30,7 @@ interface Props {
     recurrence: string;
     recurrence_end_date: string | null;
     status: string;
+    notify_contact_ids: string[];
   }) => void;
 }
 
@@ -46,6 +49,17 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
   const [remindHours, setRemindHours] = useState(2);
   const [remindMinutes, setRemindMinutes] = useState(30);
   const [showMore, setShowMore] = useState(false);
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
+
+  const { contacts } = useContacts();
+
+  const toggleContact = (contactId: string) => {
+    setSelectedContactIds((prev) =>
+      prev.includes(contactId)
+        ? prev.filter((id) => id !== contactId)
+        : [...prev, contactId]
+    );
+  };
 
   const handleSubmit = () => {
     if (!category || !title || !date) return;
@@ -65,6 +79,7 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
       remind_hours_before: remindHours,
       remind_minutes_before: remindMinutes,
       status: "pending",
+      notify_contact_ids: selectedContactIds,
     });
 
     setCategory("");
@@ -78,6 +93,7 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
     setRecurrence("none");
     setRecurrenceEndDate(undefined);
     setShowMore(false);
+    setSelectedContactIds([]);
   };
 
   return (
@@ -118,6 +134,44 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
       </div>
 
       <Input value={providerName} onChange={(e) => setProviderName(e.target.value)} placeholder="Profissional / Clínica (opcional)" className="h-9 text-sm" />
+
+      {/* Contact selector */}
+      {contacts.length > 0 && (
+        <div>
+          <div className="flex items-center gap-1.5 mb-2">
+            <Users className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="text-xs font-semibold text-card-foreground">Enviar lembrete para</Label>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {contacts.map((contact) => {
+              const labelInfo = CONTACT_LABELS.find((l) => l.value === contact.label);
+              const isSelected = selectedContactIds.includes(contact.id);
+              return (
+                <button
+                  key={contact.id}
+                  type="button"
+                  onClick={() => toggleContact(contact.id)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all",
+                    isSelected
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-background text-muted-foreground hover:border-primary/50"
+                  )}
+                >
+                  <span>{labelInfo?.emoji || "📌"}</span>
+                  <span>{contact.name}</span>
+                  {isSelected && <span className="text-primary">✓</span>}
+                </button>
+              );
+            })}
+          </div>
+          {selectedContactIds.length === 0 && (
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Nenhum selecionado — lembrete será enviado apenas para você
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Recurrence row */}
       <div className="grid grid-cols-[1fr_1fr] gap-2">

@@ -87,6 +87,22 @@ Deno.serve(async (req) => {
       if (!profile?.whatsapp_number) continue;
 
       const phone = profile.whatsapp_number.replace(/\D/g, "");
+
+      // Get additional contacts to notify
+      const contactIds: string[] = c.notify_contact_ids || [];
+      let contactPhones: string[] = [];
+      if (contactIds.length > 0) {
+        const { data: contacts } = await supabase
+          .from("user_contacts")
+          .select("whatsapp_number, name")
+          .in("id", contactIds);
+        if (contacts) {
+          contactPhones = contacts.map((ct: any) => ct.whatsapp_number.replace(/\D/g, ""));
+        }
+      }
+
+      // All phone numbers to send to (user + contacts)
+      const allPhones = [phone, ...contactPhones];
       const categoryLabels: Record<string, string> = {
         dentista: "🦷 Dentista", medico: "🏥 Médico", escola: "🏫 Escola",
         trabalho: "💼 Trabalho", veterinario: "🐾 Veterinário", reuniao: "🤝 Reunião",
@@ -127,19 +143,31 @@ Deno.serve(async (req) => {
           `\n_Enviado automaticamente pelo WhatsPing_`;
       };
 
+      // Helper to send message to all recipients
+      const sendToAll = async (msg: string, reminderType: string) => {
+        let allOk = true;
+        for (const p of allPhones) {
+          console.log(`Sending ${reminderType} for "${c.title}" to ${p}`);
+          const res = await sendWhatsApp(EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE_NAME, p, msg);
+          if (res.ok) {
+            await logNotification(supabase, c.user_id, c.id, reminderType, p, msg, "sent");
+            results.push(`✅ ${reminderType} "${c.title}" → ${p}`);
+          } else {
+            const errText = await res.text();
+            await logNotification(supabase, c.user_id, c.id, reminderType, p, msg, "failed", errText);
+            results.push(`❌ ${reminderType} "${c.title}" → ${p}: ${errText}`);
+            allOk = false;
+          }
+        }
+        return allOk;
+      };
+
       // On-time reminder
       if (!c.notified_ontime && diffMinutes <= 0 && diffMinutes > -5) {
         const msg = buildMessage("", true);
-        console.log(`Sending on-time for "${c.title}" to ${phone}`);
-        const res = await sendWhatsApp(EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE_NAME, phone, msg);
-        if (res.ok) {
+        const ok = await sendToAll(msg, "ontime");
+        if (ok) {
           await supabase.from("commitments").update({ notified_ontime: true }).eq("id", c.id);
-          await logNotification(supabase, c.user_id, c.id, "ontime", phone, msg, "sent");
-          results.push(`✅ on-time "${c.title}"`);
-        } else {
-          const errText = await res.text();
-          await logNotification(supabase, c.user_id, c.id, "ontime", phone, msg, "failed", errText);
-          results.push(`❌ on-time "${c.title}": ${errText}`);
         }
       }
 
@@ -161,49 +189,31 @@ Deno.serve(async (req) => {
         const allLargerSent = largerReminders.every(r => c[r.field]);
 
         if (!allLargerSent && largerReminders.length > 0) {
-          // A larger reminder hasn't been sent yet - send that one first
-          // Find the largest unsent reminder
           const unsentLarger = largerReminders.find(r => !c[r.field]);
           if (unsentLarger && diffMinutes <= unsentLarger.threshold && diffMinutes > -5) {
             const msg = buildMessage(unsentLarger.unit, false);
-            console.log(`Sending ${unsentLarger.type} for "${c.title}" to ${phone}`);
-            const res = await sendWhatsApp(EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE_NAME, phone, msg);
-            if (res.ok) {
+            const ok = await sendToAll(msg, unsentLarger.type);
+            if (ok) {
               const updateField: Record<string, boolean> = {};
               updateField[`notified_${unsentLarger.type}`] = true;
               await supabase.from("commitments").update(updateField).eq("id", c.id);
-              c[unsentLarger.field] = true; // update local state
-              await logNotification(supabase, c.user_id, c.id, unsentLarger.type, phone, msg, "sent");
-              results.push(`✅ ${unsentLarger.type} "${c.title}"`);
-            } else {
-              const errText = await res.text();
-              await logNotification(supabase, c.user_id, c.id, unsentLarger.type, phone, msg, "failed", errText);
-              results.push(`❌ ${unsentLarger.type} "${c.title}": ${errText}`);
+              c[unsentLarger.field] = true;
             }
           }
-          break; // Only send one reminder per cycle
+          break;
         }
 
-        // All larger reminders sent, check if this one should fire
         if (diffMinutes <= reminder.threshold && diffMinutes > -5) {
           const msg = buildMessage(reminder.unit, false);
-          console.log(`Sending ${reminder.type} for "${c.title}" to ${phone}`);
-          const res = await sendWhatsApp(EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE_NAME, phone, msg);
-
-          if (res.ok) {
+          const ok = await sendToAll(msg, reminder.type);
+          if (ok) {
             const updateField: Record<string, boolean> = {};
             updateField[`notified_${reminder.type}`] = true;
             await supabase.from("commitments").update(updateField).eq("id", c.id);
-            await logNotification(supabase, c.user_id, c.id, reminder.type, phone, msg, "sent");
-            results.push(`✅ ${reminder.type} "${c.title}"`);
-          } else {
-            const errText = await res.text();
-            await logNotification(supabase, c.user_id, c.id, reminder.type, phone, msg, "failed", errText);
-            results.push(`❌ ${reminder.type} "${c.title}": ${errText}`);
           }
-          break; // Only send one reminder per cycle
+          break;
         }
-        break; // Not time yet for this reminder
+        break;
       }
     }
 
