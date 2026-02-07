@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
       // Get additional contacts to notify
       const contactIds: string[] = c.notify_contact_ids || [];
       interface Recipient { phone: string; name: string; }
-      const recipients: Recipient[] = [{ phone, name: profile.name }];
+      let recipients: Recipient[] = [];
       if (contactIds.length > 0) {
         const { data: contacts } = await supabase
           .from("user_contacts")
@@ -102,6 +102,10 @@ Deno.serve(async (req) => {
             recipients.push({ phone: ct.whatsapp_number.replace(/\D/g, ""), name: ct.name });
           }
         }
+      }
+      // If no contacts selected, send to the owner
+      if (recipients.length === 0) {
+        recipients = [{ phone, name: profile.name }];
       }
       const categoryLabels: Record<string, string> = {
         dentista: "🦷 Dentista", medico: "🏥 Médico", escola: "🏫 Escola",
