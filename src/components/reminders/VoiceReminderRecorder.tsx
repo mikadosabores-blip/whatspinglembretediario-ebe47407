@@ -16,13 +16,20 @@ interface VoiceReminderResult {
   remind_days_before?: number;
   remind_hours_before?: number;
   remind_minutes_before?: number;
+  notify_contact_ids?: string[];
+}
+
+interface Contact {
+  id: string;
+  name: string;
 }
 
 interface Props {
   onResult: (data: VoiceReminderResult) => void;
+  contacts?: Contact[];
 }
 
-export function VoiceReminderRecorder({ onResult }: Props) {
+export function VoiceReminderRecorder({ onResult, contacts = [] }: Props) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState("");
@@ -128,7 +135,7 @@ export function VoiceReminderRecorder({ onResult }: Props) {
     setIsProcessing(true);
     try {
       const { data, error } = await supabase.functions.invoke("parse-voice-reminder", {
-        body: { transcript: text },
+        body: { transcript: text, contacts: contacts.map(c => ({ id: c.id, name: c.name })) },
       });
 
       if (error || !data?.success) {
@@ -266,6 +273,14 @@ export function VoiceReminderRecorder({ onResult }: Props) {
                   </span>
                 </div>
               ) : null}
+              {result.notify_contact_ids && result.notify_contact_ids.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-card-foreground w-20">Enviar p/:</span>
+                  <span className="text-sm text-card-foreground">
+                    {result.notify_contact_ids.map(id => contacts.find(c => c.id === id)?.name || id).join(", ")}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
