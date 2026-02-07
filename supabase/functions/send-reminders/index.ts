@@ -7,11 +7,26 @@ const corsHeaders = {
 
 async function sendWhatsApp(url: string, apiKey: string, instanceName: string, phone: string, message: string) {
   const sendUrl = `${url}/message/sendText/${instanceName}`;
-  const res = await fetch(sendUrl, {
+
+  // Try sending with original number
+  let res = await fetch(sendUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json", apikey: apiKey },
     body: JSON.stringify({ number: `${phone}@s.whatsapp.net`, text: message }),
   });
+
+  // If failed and it's a Brazilian 13-digit number (55 + DDD + 9 + 8 digits),
+  // retry without the 9th digit (55 + DDD + 8 digits = 12 digits)
+  if (!res.ok && phone.length === 13 && phone.startsWith("55")) {
+    const altPhone = phone.slice(0, 4) + phone.slice(5); // remove the 5th char (the "9")
+    console.log(`Retrying with alternate format: ${phone} -> ${altPhone}`);
+    res = await fetch(sendUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: apiKey },
+      body: JSON.stringify({ number: `${altPhone}@s.whatsapp.net`, text: message }),
+    });
+  }
+
   return res;
 }
 
