@@ -1,0 +1,1 @@
+ALTER TABLE public.commitments ADD COLUMN IF NOT EXISTS notified_ontime boolean NOT NULL DEFAULT false;

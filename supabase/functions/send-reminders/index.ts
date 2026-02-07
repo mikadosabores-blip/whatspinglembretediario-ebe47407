@@ -79,12 +79,41 @@ Deno.serve(async (req) => {
       const dateFormatted = new Date(c.commitment_date).toLocaleDateString("pt-BR");
       const timeFormatted = c.commitment_time.slice(0, 5);
 
-      // Check each reminder threshold
+      // Check each reminder threshold (before) + on-time
       const reminders = [
         { type: "days", field: "notified_days", threshold: (c.remind_days_before || 0) * 24 * 60, unit: `${c.remind_days_before} dia(s)` },
         { type: "hours", field: "notified_hours", threshold: (c.remind_hours_before || 0) * 60, unit: `${c.remind_hours_before} hora(s)` },
         { type: "minutes", field: "notified_minutes", threshold: c.remind_minutes_before || 0, unit: `${c.remind_minutes_before} minuto(s)` },
       ];
+
+      // On-time reminder (at the exact commitment time)
+      if (!c.notified_ontime && diffMinutes <= 0 && diffMinutes > -5) {
+        const onTimeMsg = `⏰ *Hora do compromisso!*\n\n` +
+          `Olá ${profile.name}! Seu compromisso é *agora*:\n\n` +
+          `${catLabel}\n` +
+          `📋 *${c.title}*\n` +
+          `📅 ${dateFormatted} às ${timeFormatted}\n` +
+          (c.provider_name ? `👤 ${c.provider_name}\n` : "") +
+          (c.location ? `📍 ${c.location}\n` : "") +
+          `\n_Enviado automaticamente pelo WhatsPing_`;
+
+        const sendUrl = `${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_INSTANCE_NAME}`;
+        console.log(`Sending on-time reminder for "${c.title}" to ${phone}...`);
+        const sendRes = await fetch(sendUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", apikey: EVOLUTION_API_KEY },
+          body: JSON.stringify({ number: `${phone}@s.whatsapp.net`, text: onTimeMsg }),
+        });
+
+        if (sendRes.ok) {
+          await supabase.from("commitments").update({ notified_ontime: true }).eq("id", c.id);
+          results.push(`✅ Sent on-time reminder for "${c.title}" to ${phone}`);
+        } else {
+          const errText = await sendRes.text();
+          console.error(`Failed on-time for "${c.title}": ${errText}`);
+          results.push(`❌ Failed on-time for "${c.title}": ${errText}`);
+        }
+      }
 
       for (const reminder of reminders) {
         const alreadyNotified = c[reminder.field];

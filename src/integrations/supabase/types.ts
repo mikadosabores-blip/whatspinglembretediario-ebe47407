@@ -27,6 +27,7 @@ export type Database = {
           notified_days: boolean
           notified_hours: boolean
           notified_minutes: boolean
+          notified_ontime: boolean
           parent_commitment_id: string | null
           provider_name: string | null
           recurrence: string
@@ -51,6 +52,7 @@ export type Database = {
           notified_days?: boolean
           notified_hours?: boolean
           notified_minutes?: boolean
+          notified_ontime?: boolean
           parent_commitment_id?: string | null
           provider_name?: string | null
           recurrence?: string
@@ -75,6 +77,7 @@ export type Database = {
           notified_days?: boolean
           notified_hours?: boolean
           notified_minutes?: boolean
+          notified_ontime?: boolean
           parent_commitment_id?: string | null
           provider_name?: string | null
           recurrence?: string
