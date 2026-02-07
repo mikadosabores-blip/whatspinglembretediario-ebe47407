@@ -46,16 +46,16 @@ export function AppSidebar() {
       </div>
 
       <SidebarContent>
-        <SidebarMenu className="px-1 py-2 space-y-0.5">
+        <SidebarMenu className="px-2 py-2 space-y-1">
           {allItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
                 <NavLink
                   to={item.url}
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
                   activeClassName="bg-primary/10 text-primary font-semibold"
                 >
-                  <item.icon className={`h-4 w-4 shrink-0 ${item.color}`} />
+                  <item.icon className={`h-5 w-5 shrink-0 ${item.color}`} />
                   <span className="truncate">{item.title}</span>
                 </NavLink>
               </SidebarMenuButton>
@@ -66,10 +66,10 @@ export function AppSidebar() {
             <SidebarMenuButton asChild>
               <NavLink
                 to="/settings"
-                className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
                 activeClassName="bg-primary/10 text-primary font-semibold"
               >
-                <Settings className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <Settings className="h-5 w-5 shrink-0 text-muted-foreground" />
                 <span className="truncate">Configurações</span>
               </NavLink>
             </SidebarMenuButton>
@@ -80,9 +80,9 @@ export function AppSidebar() {
       <SidebarFooter>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 px-3 py-2 w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-3 px-4 py-3 w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          <LogOut className="h-4 w-4 shrink-0" />
+          <LogOut className="h-5 w-5 shrink-0" />
           <span>Sair</span>
         </button>
       </SidebarFooter>
