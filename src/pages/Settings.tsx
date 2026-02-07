@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Phone, Bell, Save, Shield, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { ContactsManager } from "@/components/settings/ContactsManager";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -121,6 +122,9 @@ const Settings = () => {
             </p>
           </div>
         </div>
+
+        {/* Contacts Section */}
+        <ContactsManager />
 
         {/* Notification Preferences */}
         <div className="rounded-xl border bg-card p-5 space-y-4">

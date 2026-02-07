@@ -28,6 +28,7 @@ export type Database = {
           notified_hours: boolean
           notified_minutes: boolean
           notified_ontime: boolean
+          notify_contact_ids: string[] | null
           parent_commitment_id: string | null
           provider_name: string | null
           recurrence: string
@@ -53,6 +54,7 @@ export type Database = {
           notified_hours?: boolean
           notified_minutes?: boolean
           notified_ontime?: boolean
+          notify_contact_ids?: string[] | null
           parent_commitment_id?: string | null
           provider_name?: string | null
           recurrence?: string
@@ -78,6 +80,7 @@ export type Database = {
           notified_hours?: boolean
           notified_minutes?: boolean
           notified_ontime?: boolean
+          notify_contact_ids?: string[] | null
           parent_commitment_id?: string | null
           provider_name?: string | null
           recurrence?: string
@@ -223,6 +226,33 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          whatsapp_number?: string
+        }
+        Relationships: []
+      }
+      user_contacts: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          name: string
+          user_id: string
+          whatsapp_number: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string
+          name: string
+          user_id: string
+          whatsapp_number: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          name?: string
+          user_id?: string
           whatsapp_number?: string
         }
         Relationships: []

@@ -24,6 +24,7 @@ export interface Commitment {
   recurrence: string;
   recurrence_end_date: string | null;
   parent_commitment_id: string | null;
+  notify_contact_ids: string[];
   created_at: string;
   updated_at: string;
 }
@@ -101,7 +102,7 @@ export function useCommitments() {
     fetchCommitments();
   }, [fetchCommitments]);
 
-  const addCommitment = async (commitment: Omit<Commitment, "id" | "user_id" | "created_at" | "updated_at" | "notified_days" | "notified_hours" | "notified_minutes" | "parent_commitment_id">) => {
+  const addCommitment = async (commitment: Omit<Commitment, "id" | "user_id" | "created_at" | "updated_at" | "notified_days" | "notified_hours" | "notified_minutes" | "parent_commitment_id"> & { notify_contact_ids?: string[] }) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
