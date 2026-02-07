@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
           (c.provider_name ? `👤 ${c.provider_name}\n` : "") +
           (c.location ? `📍 ${c.location}\n` : "") +
           (c.description && !isOnTime ? `📝 ${c.description}\n` : "") +
-          `\n_Enviado automaticamente pelo WhatsPing_`;
+          `\n_WhatsPing – Lembretes inteligentes para o seu dia_`;
       };
 
       // Helper to send message to all recipients
@@ -187,7 +187,9 @@ Deno.serve(async (req) => {
         
         // Only fire if diffMinutes is within THIS reminder's window
         // Window: diffMinutes <= threshold AND diffMinutes > nextThreshold
-        if (diffMinutes <= reminder.threshold && diffMinutes > nextThreshold) {
+        // Use a minimum gap of 2 minutes so we don't fire right before ontime
+        const effectiveNextThreshold = Math.max(nextThreshold, 2);
+        if (diffMinutes <= reminder.threshold && diffMinutes > effectiveNextThreshold) {
           const ok = await sendToAll(reminder.unit, false, reminder.type);
           if (ok) {
             const updateField: Record<string, boolean> = {};
@@ -198,11 +200,17 @@ Deno.serve(async (req) => {
         }
       }
 
-      // On-time reminder: only when diffMinutes <= 0 (already past)
-      if (!firedOne && !c.notified_ontime && diffMinutes <= 0 && diffMinutes > -5) {
+      // On-time reminder: fires when diffMinutes <= 2 (covers the gap)
+      if (!firedOne && !c.notified_ontime && diffMinutes <= 2 && diffMinutes > -5) {
         const ok = await sendToAll("", true, "ontime");
         if (ok) {
-          await supabase.from("commitments").update({ notified_ontime: true, status: "done" }).eq("id", c.id);
+          await supabase.from("commitments").update({
+            notified_ontime: true,
+            notified_days: true,
+            notified_hours: true,
+            notified_minutes: true,
+            status: "done",
+          }).eq("id", c.id);
         }
       }
     }
