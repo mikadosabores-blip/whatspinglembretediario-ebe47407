@@ -9,6 +9,7 @@ import Reminders from "./pages/Reminders";
 import Agenda from "./pages/Agenda";
 import CategoryPage from "./pages/CategoryPage";
 import Settings from "./pages/Settings";
+import NotificationHistory from "./pages/NotificationHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/category/:slug" element={<CategoryPage />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/history" element={<NotificationHistory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

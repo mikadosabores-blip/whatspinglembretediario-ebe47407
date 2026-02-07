@@ -1,4 +1,4 @@
-import { CalendarClock, LayoutDashboard, Users, Settings, Bell, Building2, GraduationCap, LogOut, MessageCircle, Heart, Baby } from "lucide-react";
+import { CalendarClock, LayoutDashboard, Users, Settings, Bell, Building2, GraduationCap, LogOut, MessageCircle, Heart, Baby, History } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -19,6 +19,7 @@ const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Lembretes", url: "/reminders", icon: Bell },
   { title: "Agenda", url: "/agenda", icon: CalendarClock },
+  { title: "Histórico", url: "/history", icon: History },
 ];
 
 const categoryItems = [
