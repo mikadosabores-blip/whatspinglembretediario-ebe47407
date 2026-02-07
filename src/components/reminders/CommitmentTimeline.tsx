@@ -74,14 +74,15 @@ function CountdownDisplay({ targetDate, targetTime }: { targetDate: string; targ
   );
 }
 
-function NotificationBadge({ label, sent }: { label: string; sent: boolean }) {
+function NotificationBadge({ label, sent, value }: { label: string; sent: boolean; value: number }) {
+  if (value <= 0) return null;
   return (
     <span className={cn(
       "inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full",
       sent ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
-    )}>
+    )} title={sent ? `Lembrete de ${label} já enviado` : `Lembrete será enviado ${label} antes`}>
       {sent ? <Send className="h-2.5 w-2.5" /> : <Bell className="h-2.5 w-2.5" />}
-      {label}
+      {sent ? `✓ ${label}` : label}
     </span>
   );
 }
@@ -278,9 +279,9 @@ export function CommitmentTimeline({ commitments, onDelete, onUpdate }: Props) {
 
                       <div className="flex items-center gap-2 flex-wrap">
                         <CountdownDisplay targetDate={c.commitment_date} targetTime={c.commitment_time} />
-                        <NotificationBadge label={`${c.remind_days_before}d`} sent={c.notified_days} />
-                        <NotificationBadge label={`${c.remind_hours_before}h`} sent={c.notified_hours} />
-                        <NotificationBadge label={`${c.remind_minutes_before}min`} sent={c.notified_minutes} />
+                        <NotificationBadge label={`${c.remind_days_before} dia${c.remind_days_before !== 1 ? 's' : ''}`} sent={c.notified_days} value={c.remind_days_before} />
+                        <NotificationBadge label={`${c.remind_hours_before}h`} sent={c.notified_hours} value={c.remind_hours_before} />
+                        <NotificationBadge label={`${c.remind_minutes_before}min`} sent={c.notified_minutes} value={c.remind_minutes_before} />
                       </div>
                     </div>
 
