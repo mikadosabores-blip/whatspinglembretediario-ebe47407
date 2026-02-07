@@ -236,7 +236,7 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
               <Select value={String(remindMinutes)} onValueChange={(v) => setRemindMinutes(Number(v))}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {[0, 10, 15, 30, 45].map((m) => (
+                  {[0, 5, 10, 15, 30, 45].map((m) => (
                     <SelectItem key={m} value={String(m)}>{m}min antes</SelectItem>
                   ))}
                 </SelectContent>
