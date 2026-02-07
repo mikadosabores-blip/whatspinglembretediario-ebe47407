@@ -163,55 +163,43 @@ Deno.serve(async (req) => {
         return allOk;
       };
 
-      // On-time reminder
-      if (!c.notified_ontime && diffMinutes <= 0 && diffMinutes > -5) {
-        const ok = await sendToAll("", true, "ontime");
-        if (ok) {
-          await supabase.from("commitments").update({ notified_ontime: true }).eq("id", c.id);
-        }
-      }
-
-      // Before reminders - sorted descending so we find the right window
+      // Determine which SINGLE reminder should fire based on time windows
+      // Each reminder only fires in its proper window, preventing cascade
       const reminders = [
         { type: "days", field: "notified_days", threshold: (c.remind_days_before || 0) * 24 * 60, unit: `${c.remind_days_before} dia(s)` },
         { type: "hours", field: "notified_hours", threshold: (c.remind_hours_before || 0) * 60, unit: `${c.remind_hours_before} hora(s)` },
         { type: "minutes", field: "notified_minutes", threshold: c.remind_minutes_before || 0, unit: `${c.remind_minutes_before} minuto(s)` },
       ].filter(r => r.threshold > 0).sort((a, b) => b.threshold - a.threshold);
 
-      // Find the next reminder that should fire:
-      // Each reminder fires when diffMinutes drops below its threshold,
-      // but only if the PREVIOUS (larger) reminder was already sent
-      for (const reminder of reminders) {
+      // Find which window diffMinutes falls into
+      // Window for reminder[i] = [reminder[i].threshold, reminder[i+1].threshold or 0)
+      let firedOne = false;
+
+      for (let i = 0; i < reminders.length && !firedOne; i++) {
+        const reminder = reminders[i];
         if (c[reminder.field]) continue; // already sent
 
-        // Check if all larger reminders have been sent
-        const largerReminders = reminders.filter(r => r.threshold > reminder.threshold);
-        const allLargerSent = largerReminders.every(r => c[r.field]);
-
-        if (!allLargerSent && largerReminders.length > 0) {
-          const unsentLarger = largerReminders.find(r => !c[r.field]);
-          if (unsentLarger && diffMinutes <= unsentLarger.threshold && diffMinutes > -5) {
-            const ok = await sendToAll(unsentLarger.unit, false, unsentLarger.type);
-            if (ok) {
-              const updateField: Record<string, boolean> = {};
-              updateField[`notified_${unsentLarger.type}`] = true;
-              await supabase.from("commitments").update(updateField).eq("id", c.id);
-              c[unsentLarger.field] = true;
-            }
-          }
-          break;
-        }
-
-        if (diffMinutes <= reminder.threshold && diffMinutes > -5) {
+        const nextThreshold = i + 1 < reminders.length ? reminders[i + 1].threshold : 0;
+        
+        // Only fire if diffMinutes is within THIS reminder's window
+        // Window: diffMinutes <= threshold AND diffMinutes > nextThreshold
+        if (diffMinutes <= reminder.threshold && diffMinutes > nextThreshold) {
           const ok = await sendToAll(reminder.unit, false, reminder.type);
           if (ok) {
             const updateField: Record<string, boolean> = {};
             updateField[`notified_${reminder.type}`] = true;
             await supabase.from("commitments").update(updateField).eq("id", c.id);
           }
-          break;
+          firedOne = true;
         }
-        break;
+      }
+
+      // On-time reminder: only when diffMinutes <= 0 (already past)
+      if (!firedOne && !c.notified_ontime && diffMinutes <= 0 && diffMinutes > -5) {
+        const ok = await sendToAll("", true, "ontime");
+        if (ok) {
+          await supabase.from("commitments").update({ notified_ontime: true }).eq("id", c.id);
+        }
       }
     }
 
