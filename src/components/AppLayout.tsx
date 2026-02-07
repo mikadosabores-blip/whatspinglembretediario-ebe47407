@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { supabase } from "@/integrations/supabase/client";
+import { ArrowUp, Phone } from "lucide-react";
 
 interface Props {
   children: ReactNode;
@@ -11,6 +12,7 @@ interface Props {
 export function AppLayout({ children }: Props) {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
+  const [profile, setProfile] = useState<{ name: string; whatsapp_number: string } | null>(null);
 
   useEffect(() => {
     const check = async () => {
@@ -19,6 +21,14 @@ export function AppLayout({ children }: Props) {
         navigate("/");
         return;
       }
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("name, whatsapp_number")
+        .eq("id", session.user.id)
+        .single();
+
+      if (data) setProfile(data);
       setReady(true);
     };
     check();
@@ -32,13 +42,34 @@ export function AppLayout({ children }: Props) {
 
   if (!ready) return null;
 
+  const formatPhone = (phone: string) => {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length === 13) {
+      return `+${digits.slice(0, 2)} (${digits.slice(2, 4)}) ${digits.slice(4, 9)}-${digits.slice(9)}`;
+    }
+    if (digits.length === 12) {
+      return `+${digits.slice(0, 2)} (${digits.slice(2, 4)}) ${digits.slice(4, 8)}-${digits.slice(8)}`;
+    }
+    return phone;
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
-          <header className="flex items-center h-14 px-4 border-b border-border">
+          <header className="flex items-center h-14 px-4 border-b border-border gap-3">
             <SidebarTrigger />
+            {profile && (
+              <div className="flex items-center gap-2">
+                <ArrowUp className="h-4 w-4 text-green-500" />
+                <span className="text-sm font-semibold text-foreground">{profile.name}</span>
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Phone className="h-3 w-3" />
+                  {formatPhone(profile.whatsapp_number)}
+                </span>
+              </div>
+            )}
           </header>
           <main className="flex-1 p-6">
             {children}
