@@ -90,19 +90,19 @@ Deno.serve(async (req) => {
 
       // Get additional contacts to notify
       const contactIds: string[] = c.notify_contact_ids || [];
-      let contactPhones: string[] = [];
+      interface Recipient { phone: string; name: string; }
+      const recipients: Recipient[] = [{ phone, name: profile.name }];
       if (contactIds.length > 0) {
         const { data: contacts } = await supabase
           .from("user_contacts")
           .select("whatsapp_number, name")
           .in("id", contactIds);
         if (contacts) {
-          contactPhones = contacts.map((ct: any) => ct.whatsapp_number.replace(/\D/g, ""));
+          for (const ct of contacts) {
+            recipients.push({ phone: ct.whatsapp_number.replace(/\D/g, ""), name: ct.name });
+          }
         }
       }
-
-      // All phone numbers to send to (user + contacts)
-      const allPhones = [phone, ...contactPhones];
       const categoryLabels: Record<string, string> = {
         dentista: "🦷 Dentista", medico: "🏥 Médico", escola: "🏫 Escola",
         trabalho: "💼 Trabalho", veterinario: "🐾 Veterinário", reuniao: "🤝 Reunião",
@@ -116,10 +116,10 @@ Deno.serve(async (req) => {
       const timeFormatted = c.commitment_time.slice(0, 5);
 
       // Helper to build message
-      const buildMessage = (unitText: string, isOnTime: boolean) => {
+      const buildMessage = (recipientName: string, unitText: string, isOnTime: boolean) => {
         if (c.custom_message && c.custom_message.trim() && !isOnTime) {
           return c.custom_message
-            .replace(/{nome}/gi, profile.name)
+            .replace(/{nome}/gi, recipientName)
             .replace(/{titulo}/gi, c.title)
             .replace(/{data}/gi, dateFormatted)
             .replace(/{horario}/gi, timeFormatted)
@@ -130,8 +130,8 @@ Deno.serve(async (req) => {
         }
 
         const header = isOnTime
-          ? `⏰ *Hora do compromisso!*\n\nOlá ${profile.name}! Seu compromisso é *agora*:\n\n`
-          : `⏰ *Lembrete WhatsPing*\n\nOlá ${profile.name}! Você tem um compromisso em *${unitText}*:\n\n`;
+          ? `⏰ *Hora do compromisso!*\n\nOlá ${recipientName}! Seu compromisso é *agora*:\n\n`
+          : `⏰ *Lembrete WhatsPing*\n\nOlá ${recipientName}! Você tem um compromisso em *${unitText}*:\n\n`;
 
         return header +
           `${catLabel}\n` +
@@ -144,18 +144,19 @@ Deno.serve(async (req) => {
       };
 
       // Helper to send message to all recipients
-      const sendToAll = async (msg: string, reminderType: string) => {
+      const sendToAll = async (unitText: string, isOnTime: boolean, reminderType: string) => {
         let allOk = true;
-        for (const p of allPhones) {
-          console.log(`Sending ${reminderType} for "${c.title}" to ${p}`);
-          const res = await sendWhatsApp(EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE_NAME, p, msg);
+        for (const recipient of recipients) {
+          const msg = buildMessage(recipient.name, unitText, isOnTime);
+          console.log(`Sending ${reminderType} for "${c.title}" to ${recipient.phone} (${recipient.name})`);
+          const res = await sendWhatsApp(EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE_NAME, recipient.phone, msg);
           if (res.ok) {
-            await logNotification(supabase, c.user_id, c.id, reminderType, p, msg, "sent");
-            results.push(`✅ ${reminderType} "${c.title}" → ${p}`);
+            await logNotification(supabase, c.user_id, c.id, reminderType, recipient.phone, msg, "sent");
+            results.push(`✅ ${reminderType} "${c.title}" → ${recipient.name} (${recipient.phone})`);
           } else {
             const errText = await res.text();
-            await logNotification(supabase, c.user_id, c.id, reminderType, p, msg, "failed", errText);
-            results.push(`❌ ${reminderType} "${c.title}" → ${p}: ${errText}`);
+            await logNotification(supabase, c.user_id, c.id, reminderType, recipient.phone, msg, "failed", errText);
+            results.push(`❌ ${reminderType} "${c.title}" → ${recipient.name} (${recipient.phone}): ${errText}`);
             allOk = false;
           }
         }
@@ -164,8 +165,7 @@ Deno.serve(async (req) => {
 
       // On-time reminder
       if (!c.notified_ontime && diffMinutes <= 0 && diffMinutes > -5) {
-        const msg = buildMessage("", true);
-        const ok = await sendToAll(msg, "ontime");
+        const ok = await sendToAll("", true, "ontime");
         if (ok) {
           await supabase.from("commitments").update({ notified_ontime: true }).eq("id", c.id);
         }
@@ -191,8 +191,7 @@ Deno.serve(async (req) => {
         if (!allLargerSent && largerReminders.length > 0) {
           const unsentLarger = largerReminders.find(r => !c[r.field]);
           if (unsentLarger && diffMinutes <= unsentLarger.threshold && diffMinutes > -5) {
-            const msg = buildMessage(unsentLarger.unit, false);
-            const ok = await sendToAll(msg, unsentLarger.type);
+            const ok = await sendToAll(unsentLarger.unit, false, unsentLarger.type);
             if (ok) {
               const updateField: Record<string, boolean> = {};
               updateField[`notified_${unsentLarger.type}`] = true;
@@ -204,8 +203,7 @@ Deno.serve(async (req) => {
         }
 
         if (diffMinutes <= reminder.threshold && diffMinutes > -5) {
-          const msg = buildMessage(reminder.unit, false);
-          const ok = await sendToAll(msg, reminder.type);
+          const ok = await sendToAll(reminder.unit, false, reminder.type);
           if (ok) {
             const updateField: Record<string, boolean> = {};
             updateField[`notified_${reminder.type}`] = true;
