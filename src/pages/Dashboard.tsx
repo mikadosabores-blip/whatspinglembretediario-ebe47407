@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { MessageCircle, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { PipelineBoard } from "@/components/pipeline/PipelineBoard";
 
 const Dashboard = () => {
   const [userName, setUserName] = useState("");
@@ -49,15 +50,16 @@ const Dashboard = () => {
         </button>
       </header>
 
-      <main className="flex items-center justify-center p-6" style={{ minHeight: "calc(100vh - 65px)" }}>
-        <div className="text-center">
-          <h1 className="text-3xl font-extrabold text-foreground mb-2">
-            Olá, {userName}! 👋
+      <main className="p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-extrabold text-foreground">
+            Pipeline
           </h1>
-          <p className="text-muted-foreground">
-            Bem-vindo ao WhatsPing. Em breve novas funcionalidades aqui.
+          <p className="text-sm text-muted-foreground">
+            Arraste os cards entre as colunas para gerenciar seus contatos.
           </p>
         </div>
+        <PipelineBoard />
       </main>
     </div>
   );
