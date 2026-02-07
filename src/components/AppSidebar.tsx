@@ -25,7 +25,7 @@ const categoryItems = [
   { title: "Prestadores", url: "/category/providers", icon: Building2 },
   { title: "Contatos", url: "/category/contacts", icon: Users },
   { title: "Cursos", url: "/category/courses", icon: GraduationCap },
-  { title: "Namorados", url: "/category/partners", icon: Heart },
+  { title: "Namorado", url: "/category/partners", icon: Heart },
   { title: "Pais & Família", url: "/category/family", icon: Baby },
 ];
 

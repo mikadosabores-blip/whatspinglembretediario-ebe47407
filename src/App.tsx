@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Reminders from "./pages/Reminders";
 import Agenda from "./pages/Agenda";
 import CategoryPage from "./pages/CategoryPage";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/reminders" element={<Reminders />} />
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/category/:slug" element={<CategoryPage />} />
+          <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
