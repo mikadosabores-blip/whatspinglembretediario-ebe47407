@@ -45,9 +45,12 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
   const [customMessage, setCustomMessage] = useState("");
   const [recurrence, setRecurrence] = useState("none");
   const [recurrenceEndDate, setRecurrenceEndDate] = useState<Date>();
-  const [remindDays, setRemindDays] = useState(1);
-  const [remindHours, setRemindHours] = useState(2);
-  const [remindMinutes, setRemindMinutes] = useState(30);
+  const [remindDays, setRemindDays] = useState(0);
+  const [remindHours, setRemindHours] = useState(0);
+  const [remindMinutes, setRemindMinutes] = useState(0);
+  const [enableDays, setEnableDays] = useState(false);
+  const [enableHours, setEnableHours] = useState(false);
+  const [enableMinutes, setEnableMinutes] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
 
@@ -75,9 +78,9 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
       custom_message: customMessage,
       recurrence,
       recurrence_end_date: recurrenceEndDate ? format(recurrenceEndDate, "yyyy-MM-dd") : null,
-      remind_days_before: remindDays,
-      remind_hours_before: remindHours,
-      remind_minutes_before: remindMinutes,
+      remind_days_before: enableDays ? remindDays : 0,
+      remind_hours_before: enableHours ? remindHours : 0,
+      remind_minutes_before: enableMinutes ? remindMinutes : 0,
       status: "pending",
       notify_contact_ids: selectedContactIds,
     });
@@ -92,6 +95,12 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
     setCustomMessage("");
     setRecurrence("none");
     setRecurrenceEndDate(undefined);
+    setEnableDays(false);
+    setEnableHours(false);
+    setEnableMinutes(false);
+    setRemindDays(0);
+    setRemindHours(0);
+    setRemindMinutes(0);
     setShowMore(false);
     setSelectedContactIds([]);
   };
@@ -216,31 +225,50 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
           </div>
           <div>
             <Label className="text-xs font-semibold text-card-foreground">Lembretes automáticos</Label>
-            <div className="grid grid-cols-3 gap-2 mt-1">
-              <Select value={String(remindDays)} onValueChange={(v) => setRemindDays(Number(v))}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {[0, 1, 2, 3, 5, 7].map((d) => (
-                    <SelectItem key={d} value={String(d)}>{d} dia{d !== 1 ? "s" : ""} antes</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={String(remindHours)} onValueChange={(v) => setRemindHours(Number(v))}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {[0, 1, 2, 4, 6, 12].map((h) => (
-                    <SelectItem key={h} value={String(h)}>{h}h antes</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={String(remindMinutes)} onValueChange={(v) => setRemindMinutes(Number(v))}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {[0, 5, 10, 15, 30, 45].map((m) => (
-                    <SelectItem key={m} value={String(m)}>{m}min antes</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <p className="text-[10px] text-muted-foreground mb-2">Selecione quando deseja ser lembrado. Apenas os marcados serão enviados.</p>
+            <div className="space-y-2 mt-1">
+              <div className="flex items-center gap-2">
+                <Checkbox id="enable-days" checked={enableDays} onCheckedChange={(v) => { setEnableDays(!!v); if (v && remindDays === 0) setRemindDays(1); if (!v) setRemindDays(0); }} />
+                <Label htmlFor="enable-days" className="text-xs cursor-pointer">Dias antes</Label>
+                {enableDays && (
+                  <Select value={String(remindDays)} onValueChange={(v) => setRemindDays(Number(v))}>
+                    <SelectTrigger className="h-7 text-xs w-24"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 5, 7].map((d) => (
+                        <SelectItem key={d} value={String(d)}>{d} dia{d !== 1 ? "s" : ""}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox id="enable-hours" checked={enableHours} onCheckedChange={(v) => { setEnableHours(!!v); if (v && remindHours === 0) setRemindHours(2); if (!v) setRemindHours(0); }} />
+                <Label htmlFor="enable-hours" className="text-xs cursor-pointer">Horas antes</Label>
+                {enableHours && (
+                  <Select value={String(remindHours)} onValueChange={(v) => setRemindHours(Number(v))}>
+                    <SelectTrigger className="h-7 text-xs w-24"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 4, 6, 12].map((h) => (
+                        <SelectItem key={h} value={String(h)}>{h}h</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox id="enable-minutes" checked={enableMinutes} onCheckedChange={(v) => { setEnableMinutes(!!v); if (v && remindMinutes === 0) setRemindMinutes(30); if (!v) setRemindMinutes(0); }} />
+                <Label htmlFor="enable-minutes" className="text-xs cursor-pointer">Minutos antes</Label>
+                {enableMinutes && (
+                  <Select value={String(remindMinutes)} onValueChange={(v) => setRemindMinutes(Number(v))}>
+                    <SelectTrigger className="h-7 text-xs w-24"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {[5, 10, 15, 30, 45].map((m) => (
+                        <SelectItem key={m} value={String(m)}>{m} min</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
             </div>
           </div>
         </div>
