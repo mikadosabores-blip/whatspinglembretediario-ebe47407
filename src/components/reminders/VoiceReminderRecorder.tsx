@@ -29,6 +29,9 @@ export function VoiceReminderRecorder({ onResult }: Props) {
   const [result, setResult] = useState<VoiceReminderResult | null>(null);
   const recognitionRef = useRef<any>(null);
   const fullTranscriptRef = useRef("");
+  const isRecordingRef = useRef(false);
+
+  const autoStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startRecording = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -39,8 +42,11 @@ export function VoiceReminderRecorder({ onResult }: Props) {
 
     const recognition = new SpeechRecognition();
     recognition.lang = "pt-BR";
-    recognition.continuous = true;
     recognition.interimResults = true;
+
+    // On mobile, continuous mode often fails — detect and adapt
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    recognition.continuous = !isMobile;
 
     recognition.onresult = (event: any) => {
       let interim = "";
@@ -52,20 +58,48 @@ export function VoiceReminderRecorder({ onResult }: Props) {
           interim += event.results[i][0].transcript;
         }
       }
-      fullTranscriptRef.current = final;
-      setTranscript(final + interim);
+      if (final) {
+        fullTranscriptRef.current += (fullTranscriptRef.current ? " " : "") + final;
+      }
+      setTranscript(fullTranscriptRef.current + (interim ? " " + interim : ""));
+
+      // Reset auto-stop timer on new speech
+      if (autoStopTimeoutRef.current) clearTimeout(autoStopTimeoutRef.current);
+      autoStopTimeoutRef.current = setTimeout(() => {
+        if (recognitionRef.current && isRecordingRef.current) {
+          recognitionRef.current.stop();
+        }
+      }, 3000);
     };
 
     recognition.onerror = (event: any) => {
       console.error("Speech recognition error:", event.error);
       if (event.error === "not-allowed") {
         toast.error("Permissão do microfone negada. Habilite nas configurações do navegador.");
+      } else if (event.error === "no-speech") {
+        // On mobile this fires often — don't kill recording, just restart
+        if (isMobile && isRecordingRef.current) {
+          try { recognition.start(); } catch {}
+          return;
+        }
       }
       setIsRecording(false);
+      isRecordingRef.current = false;
     };
 
     recognition.onend = () => {
+      // On mobile, recognition ends automatically after each phrase — restart it
+      if (isMobile && isRecordingRef.current) {
+        try {
+          recognition.start();
+        } catch {
+          setIsRecording(false);
+          isRecordingRef.current = false;
+        }
+        return;
+      }
       setIsRecording(false);
+      isRecordingRef.current = false;
     };
 
     recognitionRef.current = recognition;
@@ -74,9 +108,12 @@ export function VoiceReminderRecorder({ onResult }: Props) {
     setResult(null);
     recognition.start();
     setIsRecording(true);
+    isRecordingRef.current = true;
   }, []);
 
   const stopRecording = useCallback(async () => {
+    isRecordingRef.current = false;
+    if (autoStopTimeoutRef.current) clearTimeout(autoStopTimeoutRef.current);
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
