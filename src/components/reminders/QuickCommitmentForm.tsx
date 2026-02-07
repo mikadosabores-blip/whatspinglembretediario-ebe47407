@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, ChevronDown, ChevronUp } from "lucide-react";
+import { CalendarIcon, ChevronDown, ChevronUp, Repeat } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CATEGORIES } from "@/hooks/useCommitments";
+import { CATEGORIES, RECURRENCE_OPTIONS } from "@/hooks/useCommitments";
 
 interface Props {
   onSubmit: (data: {
@@ -24,6 +24,8 @@ interface Props {
     remind_days_before: number;
     remind_hours_before: number;
     remind_minutes_before: number;
+    recurrence: string;
+    recurrence_end_date: string | null;
     status: string;
   }) => void;
 }
@@ -37,6 +39,8 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
   const [location, setLocation] = useState("");
   const [providerName, setProviderName] = useState("");
   const [customMessage, setCustomMessage] = useState("");
+  const [recurrence, setRecurrence] = useState("none");
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState<Date>();
   const [remindDays, setRemindDays] = useState(1);
   const [remindHours, setRemindHours] = useState(2);
   const [remindMinutes, setRemindMinutes] = useState(30);
@@ -54,6 +58,8 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
       location,
       provider_name: providerName,
       custom_message: customMessage,
+      recurrence,
+      recurrence_end_date: recurrenceEndDate ? format(recurrenceEndDate, "yyyy-MM-dd") : null,
       remind_days_before: remindDays,
       remind_hours_before: remindHours,
       remind_minutes_before: remindMinutes,
@@ -68,6 +74,8 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
     setLocation("");
     setProviderName("");
     setCustomMessage("");
+    setRecurrence("none");
+    setRecurrenceEndDate(undefined);
     setShowMore(false);
   };
 
@@ -75,36 +83,22 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
     <div className="rounded-xl border bg-card p-4 space-y-3">
       <p className="text-sm font-bold text-card-foreground">⚡ Novo compromisso</p>
 
-      {/* Row 1: Category + Title */}
       <div className="grid grid-cols-[140px_1fr] gap-2">
         <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="h-9 text-xs">
-            <SelectValue placeholder="Categoria" />
-          </SelectTrigger>
+          <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Categoria" /></SelectTrigger>
           <SelectContent>
             {CATEGORIES.map((c) => (
-              <SelectItem key={c.value} value={c.value}>
-                {c.emoji} {c.label}
-              </SelectItem>
+              <SelectItem key={c.value} value={c.value}>{c.emoji} {c.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Ex: Consulta Dr. Silva"
-          className="h-9 text-sm"
-        />
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Consulta Dr. Silva" className="h-9 text-sm" />
       </div>
 
-      {/* Row 2: Date + Time + Provider */}
       <div className="grid grid-cols-[1fr_100px_1fr] gap-2">
         <Popover>
           <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn("h-9 justify-start text-left text-xs font-normal", !date && "text-muted-foreground")}
-            >
+            <Button variant="outline" className={cn("h-9 justify-start text-left text-xs font-normal", !date && "text-muted-foreground")}>
               <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
               {date ? format(date, "dd/MM/yyyy") : "Data"}
             </Button>
@@ -114,48 +108,49 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
           </PopoverContent>
         </Popover>
         <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="h-9 text-xs" />
-        <Input
-          value={providerName}
-          onChange={(e) => setProviderName(e.target.value)}
-          placeholder="Profissional/Clínica"
-          className="h-9 text-sm"
-        />
+        <Input value={providerName} onChange={(e) => setProviderName(e.target.value)} placeholder="Profissional/Clínica" className="h-9 text-sm" />
       </div>
 
-      {/* Toggle more options */}
-      <button
-        type="button"
-        onClick={() => setShowMore(!showMore)}
-        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-card-foreground transition-colors"
-      >
+      {/* Recurrence row */}
+      <div className="grid grid-cols-[1fr_1fr] gap-2">
+        <div className="flex items-center gap-2">
+          <Repeat className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <Select value={recurrence} onValueChange={setRecurrence}>
+            <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {RECURRENCE_OPTIONS.map((r) => (
+                <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {recurrence !== "none" && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn("h-9 justify-start text-left text-xs font-normal", !recurrenceEndDate && "text-muted-foreground")}>
+                <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                {recurrenceEndDate ? `Até ${format(recurrenceEndDate, "dd/MM/yyyy")}` : "Até quando? (opcional)"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={recurrenceEndDate} onSelect={setRecurrenceEndDate} initialFocus className="p-3 pointer-events-auto" />
+            </PopoverContent>
+          </Popover>
+        )}
+      </div>
+
+      <button type="button" onClick={() => setShowMore(!showMore)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-card-foreground transition-colors">
         {showMore ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
         {showMore ? "Menos opções" : "Mais opções (endereço, obs., lembretes)"}
       </button>
 
       {showMore && (
         <div className="space-y-3 pt-1">
-          <Input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Endereço (opcional)"
-            className="h-9 text-sm"
-          />
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Observações..."
-            rows={2}
-            className="text-sm"
-          />
+          <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Endereço (opcional)" className="h-9 text-sm" />
+          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Observações..." rows={2} className="text-sm" />
           <div>
             <Label className="text-xs font-semibold text-card-foreground">💬 Texto do lembrete no WhatsApp</Label>
-            <Textarea
-              value={customMessage}
-              onChange={(e) => setCustomMessage(e.target.value)}
-              placeholder="Ex: Não esqueça de levar os documentos! (deixe vazio para usar mensagem padrão)"
-              rows={2}
-              className="text-sm mt-1"
-            />
+            <Textarea value={customMessage} onChange={(e) => setCustomMessage(e.target.value)} placeholder="Ex: Não esqueça de levar os documentos! (deixe vazio para usar mensagem padrão)" rows={2} className="text-sm mt-1" />
           </div>
           <div>
             <Label className="text-xs font-semibold text-card-foreground">Lembretes automáticos</Label>
@@ -190,7 +185,7 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
       )}
 
       <Button onClick={handleSubmit} className="w-full h-9 text-sm" disabled={!category || !title || !date}>
-        Salvar
+        {recurrence !== "none" ? "🔄 Salvar com repetição" : "Salvar"}
       </Button>
     </div>
   );
