@@ -3,9 +3,11 @@ import { QuickCommitmentForm } from "@/components/reminders/QuickCommitmentForm"
 import { CommitmentTimeline } from "@/components/reminders/CommitmentTimeline";
 import { VoiceReminderRecorder } from "@/components/reminders/VoiceReminderRecorder";
 import { useCommitments } from "@/hooks/useCommitments";
+import { useContacts } from "@/hooks/useContacts";
 
 const Reminders = () => {
   const { commitments, loading, addCommitment, updateCommitment, deleteCommitment } = useCommitments();
+  const { contacts } = useContacts();
 
   const handleVoiceResult = (data: any) => {
     addCommitment({
@@ -23,7 +25,7 @@ const Reminders = () => {
       recurrence: "none",
       recurrence_end_date: null,
       status: "pending",
-      notify_contact_ids: [],
+      notify_contact_ids: data.notify_contact_ids || [],
     });
   };
 
@@ -37,7 +39,7 @@ const Reminders = () => {
       </div>
 
       <div className="mb-4">
-        <VoiceReminderRecorder onResult={handleVoiceResult} />
+        <VoiceReminderRecorder onResult={handleVoiceResult} contacts={contacts} />
       </div>
 
       <div className="mb-6">

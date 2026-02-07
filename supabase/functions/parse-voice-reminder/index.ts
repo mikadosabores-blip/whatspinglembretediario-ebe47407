@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
       throw new Error("Missing LOVABLE_API_KEY");
     }
 
-    const { transcript } = await req.json();
+    const { transcript, contacts } = await req.json();
     if (!transcript || !transcript.trim()) {
       return new Response(JSON.stringify({ error: "No transcript provided" }), {
         status: 400,
@@ -45,6 +45,10 @@ Analise o texto transcrito e extraia as seguintes informações em JSON:
 - remind_days_before: quantos dias antes lembrar (0 se não mencionado)
 - remind_hours_before: quantas horas antes lembrar (0 se não mencionado)
 - remind_minutes_before: quantos minutos antes lembrar (0 se não mencionado)
+- notify_contact_ids: array de IDs dos contatos mencionados pelo nome (opcional)
+
+Contatos disponíveis do usuário:
+${contacts && contacts.length > 0 ? contacts.map((c: any) => `- ID: "${c.id}", Nome: "${c.name}"`).join("\n") : "Nenhum contato cadastrado"}
 
 Regras:
 - Se disser "hoje", use ${todayStr}
@@ -52,6 +56,7 @@ Regras:
 - Se mencionar dia da semana (ex: "segunda"), calcule a próxima ocorrência
 - Se disser "me lembra X minutos/horas antes", defina o campo correto
 - Identifique a categoria pelo contexto (ex: "dentista" → dentista, "reunião de trabalho" → reuniao)
+- Se o usuário mencionar o nome de uma pessoa, verifique se corresponde a algum contato da lista acima e inclua o ID no campo notify_contact_ids
 - Retorne APENAS o JSON, sem texto adicional`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
