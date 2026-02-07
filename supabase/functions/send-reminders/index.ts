@@ -65,11 +65,15 @@ Deno.serve(async (req) => {
     if (error) throw error;
 
     const results: string[] = [];
+    // Use Brazil timezone (UTC-3) since commitments are stored in local time
     const now = new Date();
+    const brasilOffset = -3 * 60; // UTC-3 in minutes
+    const brasilNow = new Date(now.getTime() + (brasilOffset + now.getTimezoneOffset()) * 60000);
 
     for (const c of commitmentsOnly || []) {
+      // Parse commitment date/time as local Brasil time
       const commitmentDateTime = new Date(`${c.commitment_date}T${c.commitment_time}`);
-      const diffMs = commitmentDateTime.getTime() - now.getTime();
+      const diffMs = commitmentDateTime.getTime() - brasilNow.getTime();
       const diffMinutes = diffMs / (1000 * 60);
 
       if (diffMinutes < -5) continue;
