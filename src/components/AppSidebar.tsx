@@ -17,7 +17,7 @@ const mainItems = [
   { title: "Lembretes", url: "/reminders", icon: Bell, color: "text-amber-500" },
   { title: "Agenda", url: "/agenda", icon: CalendarClock, color: "text-emerald-500" },
   { title: "Histórico", url: "/history", icon: History, color: "text-purple-500" },
-];
+] as const;
 
 const categoryItems = [
   { title: "Prestadores", url: "/category/providers", icon: Building2, color: "text-slate-500" },
@@ -25,7 +25,9 @@ const categoryItems = [
   { title: "Cursos", url: "/category/courses", icon: GraduationCap, color: "text-orange-500" },
   { title: "Namorado", url: "/category/partners", icon: Heart, color: "text-rose-500" },
   { title: "Pais & Família", url: "/category/family", icon: Baby, color: "text-pink-400" },
-];
+] as const;
+
+const allItems = [...mainItems, ...categoryItems];
 
 export function AppSidebar() {
   const navigate = useNavigate();
@@ -36,19 +38,17 @@ export function AppSidebar() {
     navigate("/");
   };
 
-  const allItems = [...mainItems, ...categoryItems];
-
   return (
     <Sidebar className="border-r border-border">
       <div className="flex items-center justify-center gap-3 py-5 border-b border-border">
-        <MessageCircle className="w-6 h-6 text-primary" strokeWidth={2.5} />
-        <span className="text-base font-bold text-foreground tracking-tight">WhatsPing</span>
+        <MessageCircle className="w-6 h-6 text-primary shrink-0" strokeWidth={2.5} />
+        <span className="text-base font-bold text-foreground tracking-tight whitespace-nowrap">WhatsPing</span>
       </div>
 
       <SidebarContent>
         <SidebarMenu className="px-2 py-3 space-y-1">
           {allItems.map((item) => (
-            <SidebarMenuItem key={item.title}>
+            <SidebarMenuItem key={item.url}>
               <SidebarMenuButton asChild size="lg">
                 <NavLink
                   to={item.url}
@@ -56,13 +56,13 @@ export function AppSidebar() {
                   activeClassName="bg-primary/10 text-primary font-semibold"
                 >
                   <item.icon className={`!h-5 !w-5 shrink-0 ${item.color}`} />
-                  <span className="truncate">{item.title}</span>
+                  <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.title}</span>
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
 
-          <SidebarMenuItem>
+          <SidebarMenuItem key="settings">
             <SidebarMenuButton asChild size="lg">
               <NavLink
                 to="/settings"
@@ -70,7 +70,7 @@ export function AppSidebar() {
                 activeClassName="bg-primary/10 text-primary font-semibold"
               >
                 <Settings className="!h-5 !w-5 shrink-0 text-muted-foreground" />
-                <span className="truncate">Configurações</span>
+                <span className="whitespace-nowrap overflow-hidden text-ellipsis">Configurações</span>
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -83,7 +83,7 @@ export function AppSidebar() {
           className="flex items-center gap-3 px-4 py-4 w-full text-base text-muted-foreground hover:text-foreground transition-colors"
         >
           <LogOut className="h-5 w-5 shrink-0" />
-          <span>Sair</span>
+          <span className="whitespace-nowrap">Sair</span>
         </button>
       </SidebarFooter>
     </Sidebar>
