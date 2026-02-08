@@ -56,51 +56,73 @@ export function VoiceReminderRecorder({ onResult, contacts = [] }: Props) {
       recognition.continuous = !isMobile;
 
       recognition.onresult = (event: any) => {
-        let interim = "";
-        let final = "";
-        for (let i = 0; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            final += event.results[i][0].transcript;
-          } else {
-            interim += event.results[i][0].transcript;
+        try {
+          let interim = "";
+          let final = "";
+          for (let i = 0; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+              final += event.results[i][0].transcript;
+            } else {
+              interim += event.results[i][0].transcript;
+            }
           }
-        }
-        if (final) {
-          fullTranscriptRef.current += (fullTranscriptRef.current ? " " : "") + final;
-        }
-        setTranscript(fullTranscriptRef.current + (interim ? " " + interim : ""));
+          if (final) {
+            fullTranscriptRef.current += (fullTranscriptRef.current ? " " : "") + final;
+          }
+          setTranscript(fullTranscriptRef.current + (interim ? " " + interim : ""));
 
-        if (autoStopTimeoutRef.current) clearTimeout(autoStopTimeoutRef.current);
-        autoStopTimeoutRef.current = setTimeout(() => {
-          if (recognitionRef.current && isRecordingRef.current) {
-            recognitionRef.current.stop();
-          }
-        }, 3000);
+          if (autoStopTimeoutRef.current) clearTimeout(autoStopTimeoutRef.current);
+          autoStopTimeoutRef.current = setTimeout(() => {
+            try {
+              if (recognitionRef.current && isRecordingRef.current) {
+                recognitionRef.current.stop();
+              }
+            } catch (e) {
+              console.error("Auto-stop error:", e);
+            }
+          }, 3000);
+        } catch (e) {
+          console.error("onresult error:", e);
+        }
       };
 
       recognition.onerror = (event: any) => {
-        console.error("Speech recognition error:", event.error);
-        if (event.error === "not-allowed") {
-          toast.error("Permissão do microfone negada. Habilite nas configurações do navegador.");
-        } else if (event.error === "no-speech") {
-          if (isMobile && isRecordingRef.current) {
-            try { recognition.start(); } catch {}
-            return;
+        try {
+          console.error("Speech recognition error:", event.error);
+          if (event.error === "not-allowed") {
+            toast.error("Permissão do microfone negada. Habilite nas configurações do navegador.");
+          } else if (event.error === "no-speech") {
+            if (isMobile && isRecordingRef.current) {
+              try { recognition.start(); } catch {}
+              return;
+            }
+          } else if (event.error === "aborted") {
+            // Silently handle aborted errors on mobile
+            if (isMobile && isRecordingRef.current) {
+              try { recognition.start(); } catch {}
+              return;
+            }
           }
+        } catch (e) {
+          console.error("onerror handler error:", e);
         }
         setIsRecording(false);
         isRecordingRef.current = false;
       };
 
       recognition.onend = () => {
-        if (isMobile && isRecordingRef.current) {
-          try {
-            recognition.start();
-          } catch {
-            setIsRecording(false);
-            isRecordingRef.current = false;
+        try {
+          if (isMobile && isRecordingRef.current) {
+            try {
+              recognition.start();
+            } catch {
+              setIsRecording(false);
+              isRecordingRef.current = false;
+            }
+            return;
           }
-          return;
+        } catch (e) {
+          console.error("onend handler error:", e);
         }
         setIsRecording(false);
         isRecordingRef.current = false;
