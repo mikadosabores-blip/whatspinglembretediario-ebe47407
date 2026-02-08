@@ -51,7 +51,7 @@ export function AppSidebar() {
         <span className="text-base font-bold text-foreground tracking-tight">WhatsPing</span>
       </div>
 
-      <SidebarContent>
+      <SidebarContent className="overflow-x-hidden">
         <nav className="px-2 py-3 space-y-1">
           {allItems.map((item) => (
             <NavLink
@@ -62,7 +62,7 @@ export function AppSidebar() {
               activeClassName="bg-primary/10 text-primary font-semibold"
             >
               <item.icon className={`h-5 w-5 shrink-0 ${item.color}`} />
-              <span className="whitespace-nowrap">{item.title}</span>
+              <span>{item.title}</span>
             </NavLink>
           ))}
 
@@ -73,7 +73,7 @@ export function AppSidebar() {
             activeClassName="bg-primary/10 text-primary font-semibold"
           >
             <Settings className="h-5 w-5 shrink-0 text-muted-foreground" />
-            <span className="whitespace-nowrap">Configurações</span>
+            <span>Configurações</span>
           </NavLink>
         </nav>
       </SidebarContent>
