@@ -122,7 +122,7 @@ function EditableCard({ commitment, onSave, onCancel }: {
 
   return (
     <div className="rounded-xl border-2 border-primary bg-card p-4 space-y-3">
-      <div className="grid grid-cols-[120px_1fr] gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-2">
         <Select value={category} onValueChange={setCategory}>
           <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -134,7 +134,7 @@ function EditableCard({ commitment, onSave, onCancel }: {
         <Input value={title} onChange={(e) => setTitle(e.target.value)} className="h-8 text-sm" />
       </div>
 
-      <div className="grid grid-cols-[1fr_90px_1fr] gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr_90px_1fr] gap-2">
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className="h-8 justify-start text-left text-xs font-normal">
@@ -249,9 +249,9 @@ export function CommitmentTimeline({ commitments, onDelete, onUpdate }: Props) {
                 >
                   <div className="absolute -left-[22px] top-5 h-3 w-3 rounded-full bg-primary border-2 border-background" />
 
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="text-lg">{cat?.emoji || "📌"}</span>
                         <span className="font-bold text-card-foreground text-sm">{c.title}</span>
                         <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">

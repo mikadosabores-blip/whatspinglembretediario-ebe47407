@@ -41,14 +41,14 @@ function CommitmentCard({ commitment }: { commitment: Commitment }) {
       "rounded-xl border bg-card p-4 hover:shadow-md transition-shadow",
       commitment.status === "done" && "opacity-60"
     )}>
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
         <span className="text-lg">{cat?.emoji || "📌"}</span>
         <span className="font-bold text-card-foreground text-sm">{commitment.title}</span>
         <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
           {cat?.label || commitment.category}
         </span>
         <span className={cn(
-          "text-[10px] font-medium px-2 py-0.5 rounded-full ml-auto",
+          "text-[10px] font-medium px-2 py-0.5 rounded-full",
           commitment.status === "done" ? "bg-primary/15 text-primary" : "bg-accent/20 text-accent-foreground"
         )}>
           {commitment.status === "done" ? "✓ Concluído" : "Pendente"}
@@ -103,7 +103,7 @@ const CategoryPage = () => {
         <p className="text-sm text-muted-foreground">{meta.description}</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
         <div className="rounded-xl border bg-card p-4 flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-lg">
             {CATEGORIES.find((c) => meta.categories.includes(c.value))?.emoji || "📌"}

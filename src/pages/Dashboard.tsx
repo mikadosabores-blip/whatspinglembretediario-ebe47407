@@ -17,7 +17,7 @@ const Dashboard = () => {
       
 
       {/* Stats - inline compact */}
-      <div className="flex items-center gap-6 mb-6 flex-wrap">
+      <div className="flex items-center gap-4 sm:gap-6 mb-6 flex-wrap">
         <div className="flex items-center gap-2">
           <Bell className="h-4 w-4 text-primary" />
           <span className="text-lg font-bold text-foreground">{pending.length}</span>
