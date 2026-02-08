@@ -3,14 +3,13 @@ import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
   SidebarContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useCallback } from "react";
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, color: "text-blue-500" },
@@ -31,12 +30,19 @@ const allItems = [...mainItems, ...categoryItems];
 
 export function AppSidebar() {
   const navigate = useNavigate();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success("Você saiu da conta.");
     navigate("/");
   };
+
+  const closeMobileSidebar = useCallback(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [isMobile, setOpenMobile]);
 
   return (
     <Sidebar className="border-r border-border">
@@ -51,6 +57,7 @@ export function AppSidebar() {
             <NavLink
               key={item.url}
               to={item.url}
+              onClick={closeMobileSidebar}
               className="flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
               activeClassName="bg-primary/10 text-primary font-semibold"
             >
@@ -61,6 +68,7 @@ export function AppSidebar() {
 
           <NavLink
             to="/settings"
+            onClick={closeMobileSidebar}
             className="flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
             activeClassName="bg-primary/10 text-primary font-semibold"
           >
