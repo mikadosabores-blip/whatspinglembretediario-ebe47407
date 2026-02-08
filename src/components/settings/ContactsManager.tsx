@@ -76,7 +76,10 @@ export function ContactsManager() {
       setNewWhatsapp("");
       setNewLabel("familia");
       setCheckResult(null);
-      setShowForm(false);
+      // Keep form open if user can still add more contacts
+      if (!canAddMore || contacts.length + 1 >= 3) {
+        setShowForm(false);
+      }
     }
   };
 
