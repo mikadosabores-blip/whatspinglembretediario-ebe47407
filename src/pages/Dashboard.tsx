@@ -1,4 +1,3 @@
-import { AppLayout } from "@/components/AppLayout";
 import { QuickCommitmentForm } from "@/components/reminders/QuickCommitmentForm";
 import { CommitmentTimeline } from "@/components/reminders/CommitmentTimeline";
 import { useCommitments, CATEGORIES } from "@/hooks/useCommitments";
@@ -13,9 +12,7 @@ const Dashboard = () => {
   const done = commitments.filter((c) => c.status === "done");
 
   return (
-    <AppLayout>
-      
-
+    <>
       {/* Stats - inline compact */}
       <div className="flex items-center gap-4 sm:gap-6 mb-6 flex-wrap">
         <div className="flex items-center gap-2">
@@ -52,7 +49,7 @@ const Dashboard = () => {
           onUpdate={updateCommitment}
         />
       )}
-    </AppLayout>
+    </>
   );
 };
 

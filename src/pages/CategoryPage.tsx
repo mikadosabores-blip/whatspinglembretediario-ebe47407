@@ -1,4 +1,3 @@
-import { AppLayout } from "@/components/AppLayout";
 import { useCommitments, CATEGORIES, type Commitment } from "@/hooks/useCommitments";
 import { useParams } from "react-router-dom";
 import { Clock, MapPin, CalendarIcon } from "lucide-react";
@@ -85,11 +84,7 @@ const CategoryPage = () => {
   const meta = slug ? CATEGORY_META[slug] : null;
 
   if (!meta) {
-    return (
-      <AppLayout>
-        <p className="text-muted-foreground">Categoria não encontrada.</p>
-      </AppLayout>
-    );
+    return <p className="text-muted-foreground">Categoria não encontrada.</p>;
   }
 
   const filtered = commitments.filter((c) => meta.categories.includes(c.category));
@@ -97,7 +92,7 @@ const CategoryPage = () => {
   const done = filtered.filter((c) => c.status === "done");
 
   return (
-    <AppLayout>
+    <>
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold text-foreground">{meta.title}</h1>
         <p className="text-sm text-muted-foreground">{meta.description}</p>
@@ -158,7 +153,7 @@ const CategoryPage = () => {
           )}
         </div>
       )}
-    </AppLayout>
+    </>
   );
 };
 

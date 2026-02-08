@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -53,7 +52,7 @@ const NotificationHistory = () => {
   const failedCount = logs.filter((l) => l.status === "failed").length;
 
   return (
-    <AppLayout>
+    <>
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-foreground">Histórico de Envios</h1>
@@ -152,7 +151,7 @@ const NotificationHistory = () => {
           })}
         </div>
       )}
-    </AppLayout>
+    </>
   );
 };
 

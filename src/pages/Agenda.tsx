@@ -14,7 +14,6 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
-import { AppLayout } from "@/components/AppLayout";
 import { useCommitments, CATEGORIES, type Commitment } from "@/hooks/useCommitments";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -38,7 +37,7 @@ const Agenda = () => {
   const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
   return (
-    <AppLayout>
+    <>
       <h1 className="text-2xl font-extrabold text-foreground mb-6">Agenda</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
@@ -151,7 +150,7 @@ const Agenda = () => {
           </div>
         </div>
       </div>
-    </AppLayout>
+    </>
   );
 };
 
