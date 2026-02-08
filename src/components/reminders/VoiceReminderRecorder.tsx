@@ -41,11 +41,22 @@ export function VoiceReminderRecorder({ onResult, contacts = [] }: Props) {
   const autoStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSpeechSupported = !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
 
-  const startRecording = useCallback(() => {
+  const startRecording = useCallback(async () => {
     try {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SpeechRecognition) {
         toast.error("Seu navegador não suporta reconhecimento de voz. Use Chrome ou Edge.");
+        return;
+      }
+
+      // Request microphone permission FIRST before starting recognition
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Stop the stream immediately - we just needed the permission
+        stream.getTracks().forEach(track => track.stop());
+      } catch (permErr) {
+        console.error("Microphone permission denied:", permErr);
+        toast.error("Permissão do microfone negada. Habilite nas configurações do navegador.");
         return;
       }
 
@@ -97,12 +108,14 @@ export function VoiceReminderRecorder({ onResult, contacts = [] }: Props) {
               try { recognition.start(); } catch {}
               return;
             }
+            toast.error("Nenhuma fala detectada. Tente novamente.");
           } else if (event.error === "aborted") {
-            // Silently handle aborted errors on mobile
             if (isMobile && isRecordingRef.current) {
               try { recognition.start(); } catch {}
               return;
             }
+          } else {
+            toast.error("Erro no reconhecimento de voz. Tente novamente.");
           }
         } catch (e) {
           console.error("onerror handler error:", e);
@@ -133,9 +146,12 @@ export function VoiceReminderRecorder({ onResult, contacts = [] }: Props) {
       fullTranscriptRef.current = "";
       setTranscript("");
       setResult(null);
-      recognition.start();
+
+      // Set state BEFORE starting recognition
       setIsRecording(true);
       isRecordingRef.current = true;
+
+      recognition.start();
     } catch (err) {
       console.error("Failed to start recording:", err);
       toast.error("Erro ao iniciar gravação. Verifique as permissões do microfone.");
