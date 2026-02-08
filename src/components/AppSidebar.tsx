@@ -55,7 +55,7 @@ export function AppSidebar() {
               activeClassName="bg-primary/10 text-primary font-semibold"
             >
               <item.icon className={`h-5 w-5 shrink-0 ${item.color}`} />
-              <span>{item.title}</span>
+              <span className="whitespace-nowrap">{item.title}</span>
             </NavLink>
           ))}
 
@@ -65,7 +65,7 @@ export function AppSidebar() {
             activeClassName="bg-primary/10 text-primary font-semibold"
           >
             <Settings className="h-5 w-5 shrink-0 text-muted-foreground" />
-            <span>Configurações</span>
+            <span className="whitespace-nowrap">Configurações</span>
           </NavLink>
         </nav>
       </SidebarContent>
