@@ -39,6 +39,7 @@ export function VoiceReminderRecorder({ onResult, contacts = [] }: Props) {
   const isRecordingRef = useRef(false);
 
   const autoStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSpeechSupported = !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
 
   const startRecording = useCallback(() => {
     try {
@@ -201,14 +202,21 @@ export function VoiceReminderRecorder({ onResult, contacts = [] }: Props) {
         🎙️ Lembrete por voz
       </p>
 
-      {!result && !isProcessing && (
+      {!isSpeechSupported && (
+        <p className="text-xs text-destructive">
+          Seu navegador não suporta reconhecimento de voz. Use o Chrome no celular.
+        </p>
+      )}
+
+      {isSpeechSupported && !result && !isProcessing && (
         <>
           <p className="text-xs text-muted-foreground">
-            Fale o compromisso que deseja agendar. Ex: "Consulta no dentista amanhã às 14 horas, me lembra 30 minutos antes"
+            Fale o compromisso que deseja agendar. Ex: "Consulta no dentista amanhã às 14 horas"
           </p>
 
           <div className="flex items-center gap-3">
             <Button
+              type="button"
               onClick={isRecording ? stopRecording : startRecording}
               variant={isRecording ? "destructive" : "default"}
               size="sm"
@@ -217,7 +225,7 @@ export function VoiceReminderRecorder({ onResult, contacts = [] }: Props) {
               {isRecording ? (
                 <>
                   <MicOff className="h-4 w-4" />
-                  Parar gravação
+                  Parar
                 </>
               ) : (
                 <>
@@ -310,11 +318,11 @@ export function VoiceReminderRecorder({ onResult, contacts = [] }: Props) {
           </div>
 
           <div className="flex gap-2">
-            <Button size="sm" onClick={confirmResult} className="gap-1.5 h-9 text-xs flex-1">
+            <Button type="button" size="sm" onClick={confirmResult} className="gap-1.5 h-9 text-xs flex-1">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Confirmar e salvar
             </Button>
-            <Button size="sm" variant="ghost" onClick={cancelResult} className="gap-1 h-9 text-xs">
+            <Button type="button" size="sm" variant="ghost" onClick={cancelResult} className="gap-1 h-9 text-xs">
               <X className="h-3.5 w-3.5" />
               Cancelar
             </Button>
