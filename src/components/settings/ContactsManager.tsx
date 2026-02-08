@@ -246,7 +246,7 @@ export function ContactsManager() {
           </div>
 
           {/* Name + Label */}
-          <div className="grid grid-cols-[1fr_120px] gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px] gap-2">
             <div>
               <Label className="text-xs font-semibold mb-1 block">Nome</Label>
               <Input

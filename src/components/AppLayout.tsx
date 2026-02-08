@@ -58,20 +58,20 @@ export function AppLayout({ children }: Props) {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
-          <header className="flex items-center h-14 px-4 border-b border-border gap-3">
+          <header className="flex items-center h-14 px-3 sm:px-4 border-b border-border gap-2 sm:gap-3 overflow-hidden">
             <SidebarTrigger />
             {profile && (
-              <div className="flex items-center gap-2">
-                <ArrowUp className="h-4 w-4 text-green-500" />
-                <span className="text-sm font-semibold text-foreground">{profile.name}</span>
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Phone className="h-3 w-3" />
+              <div className="flex items-center gap-2 min-w-0">
+                <ArrowUp className="h-4 w-4 text-green-500 shrink-0" />
+                <span className="text-sm font-semibold text-foreground truncate">{profile.name}</span>
+                <span className="text-xs text-muted-foreground items-center gap-1 hidden sm:flex">
+                  <Phone className="h-3 w-3 shrink-0" />
                   {formatPhone(profile.whatsapp_number)}
                 </span>
               </div>
             )}
           </header>
-          <main className="flex-1 p-4 md:p-6">
+          <main className="flex-1 p-3 sm:p-4 md:p-6">
             {children}
           </main>
         </div>

@@ -54,14 +54,14 @@ const NotificationHistory = () => {
 
   return (
     <AppLayout>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold text-foreground">Histórico de Envios</h1>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-foreground">Histórico de Envios</h1>
           <p className="text-sm text-muted-foreground">
             Acompanhe todas as mensagens enviadas pelo WhatsPing.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchLogs} className="gap-1.5">
+        <Button variant="outline" size="sm" onClick={fetchLogs} className="gap-1.5 self-start sm:self-auto">
           <RefreshCw className="h-3.5 w-3.5" />
           Atualizar
         </Button>

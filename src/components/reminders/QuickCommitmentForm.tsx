@@ -109,7 +109,7 @@ export function QuickCommitmentForm({ onSubmit }: Props) {
     <div className="rounded-xl border bg-card p-4 space-y-3">
       <p className="text-sm font-bold text-card-foreground">⚡ Novo compromisso</p>
 
-      <div className="grid grid-cols-[140px_1fr] gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-2">
         <Select value={category} onValueChange={setCategory}>
           <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Categoria" /></SelectTrigger>
           <SelectContent>
