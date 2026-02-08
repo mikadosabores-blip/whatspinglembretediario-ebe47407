@@ -1,4 +1,3 @@
-import { AppLayout } from "@/components/AppLayout";
 import { QuickCommitmentForm } from "@/components/reminders/QuickCommitmentForm";
 import { CommitmentTimeline } from "@/components/reminders/CommitmentTimeline";
 import { VoiceReminderRecorder } from "@/components/reminders/VoiceReminderRecorder";
@@ -30,7 +29,7 @@ const Reminders = () => {
   };
 
   return (
-    <AppLayout>
+    <>
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold text-foreground">Lembretes Inteligentes</h1>
         <p className="text-sm text-muted-foreground">
@@ -57,7 +56,7 @@ const Reminders = () => {
           onUpdate={updateCommitment}
         />
       )}
-    </AppLayout>
+    </>
   );
 };
 

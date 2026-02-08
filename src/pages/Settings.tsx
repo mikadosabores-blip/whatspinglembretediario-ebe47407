@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -81,16 +80,14 @@ const Settings = () => {
 
   if (loading) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
-      </AppLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
     );
   }
 
   return (
-    <AppLayout>
+    <>
       <h1 className="text-2xl font-extrabold text-foreground mb-6">Configurações</h1>
 
       <div className="max-w-lg space-y-6">
@@ -197,7 +194,7 @@ const Settings = () => {
           Sair da conta
         </Button>
       </div>
-    </AppLayout>
+    </>
   );
 };
 

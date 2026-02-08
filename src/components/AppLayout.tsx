@@ -1,20 +1,17 @@
-import { ReactNode, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowUp, Phone } from "lucide-react";
 
-interface Props {
-  children: ReactNode;
-}
-
-export function AppLayout({ children }: Props) {
+export function AppLayout() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
   const [profile, setProfile] = useState<{ name: string; whatsapp_number: string } | null>(null);
 
   useEffect(() => {
+    let mounted = true;
     const check = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -28,8 +25,10 @@ export function AppLayout({ children }: Props) {
         .eq("id", session.user.id)
         .single();
 
-      if (data) setProfile(data);
-      setReady(true);
+      if (mounted) {
+        if (data) setProfile(data);
+        setReady(true);
+      }
     };
     check();
 
@@ -37,7 +36,10 @@ export function AppLayout({ children }: Props) {
       if (!session) navigate("/");
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   if (!ready) return null;
@@ -72,7 +74,7 @@ export function AppLayout({ children }: Props) {
             )}
           </header>
           <main className="flex-1 p-3 sm:p-4 md:p-6">
-            {children}
+            <Outlet />
           </main>
         </div>
       </div>
